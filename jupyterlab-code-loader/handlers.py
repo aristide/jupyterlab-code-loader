@@ -210,12 +210,13 @@ class CopyHandler(APIHandler):
                 shutil.copy2(dep_src, dep_dest)
 
         # Return path relative to Jupyter server root for docmanager:open
-        server_root = Path(self.contents_manager.root_dir)
+        server_root = Path(self.contents_manager.root_dir).resolve()
+        dest_resolved = dest.resolve()
         try:
-            relative_path = dest.relative_to(server_root)
+            relative_path = dest_resolved.relative_to(server_root)
         except ValueError:
             # dest is outside server root — return absolute as fallback
-            relative_path = dest
+            relative_path = dest_resolved
 
         self.finish(json.dumps({
             "path": str(relative_path),
