@@ -163,9 +163,29 @@ ln -s "$(pwd)/skills/cloader-content" ~/.claude/skills/cloader-content
 
 No restart needed — Claude Code detects skills immediately.
 
-### Usage
+### Slash command
 
-Once installed, the skill triggers automatically in Claude Code when you ask to manage code-loader content. Examples:
+This repository also includes a `/populate-repo` slash command (in `.claude/commands/populate-repo.md`) that provides a quick way to invoke the skill. When working in this repo, type:
+
+```
+/populate-repo scaffold a new examples repository at ~/my-examples
+/populate-repo add a "data-science" domain with a pandas intro notebook
+/populate-repo add a bash snippet for curl requests to the data-science domain
+/populate-repo validate the repository at ~/my-examples
+```
+
+Or just `/populate-repo` with no arguments to see available actions.
+
+To use this command in **another project**, copy it:
+
+```bash
+mkdir -p /path/to/other-project/.claude/commands
+cp .claude/commands/populate-repo.md /path/to/other-project/.claude/commands/
+```
+
+The skill also triggers automatically from natural language when installed — the slash command is just a convenient shortcut.
+
+### Usage examples
 
 ```
 > Scaffold a new examples repository at ~/my-examples

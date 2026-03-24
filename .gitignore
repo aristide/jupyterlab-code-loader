@@ -219,4 +219,5 @@ ui-tests/playwright-report/
 .eslintcache
 .stylelintcache
 
-.claude/
+.claude/*
+!.claude/commands/
