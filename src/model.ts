@@ -26,7 +26,7 @@ export interface ICodeItem {
   title: string;
   description: string;
   type: 'notebook' | 'script';
-  code_lang: 'python' | 'r' | 'julia';
+  code_lang: 'python' | 'r' | 'julia' | 'bash';
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
   estimated_time?: string;
   tags: string[];
@@ -47,7 +47,7 @@ export interface ISnippet {
   id: string;
   title: string;
   description?: string;
-  code_lang: 'python' | 'r' | 'julia';
+  code_lang: 'python' | 'r' | 'julia' | 'bash';
   lang: string;
   tags: string[];
   code: string;

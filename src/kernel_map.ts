@@ -17,7 +17,11 @@ const KERNEL_PATTERNS: Array<[RegExp, string]> = [
   [/^r\d/i, 'r'],
 
   // Julia kernels
-  [/^julia/i, 'julia']
+  [/^julia/i, 'julia'],
+
+  // Bash kernels
+  [/^bash$/i, 'bash'],
+  [/^sh$/i, 'bash']
 ];
 
 export function kernelToCodeLang(kernelName: string | null): string | null {
@@ -43,6 +47,8 @@ export function codeLangLabel(codeLang: string | null): string {
       return 'R';
     case 'julia':
       return 'Julia';
+    case 'bash':
+      return 'Bash';
     default:
       return 'All';
   }
@@ -59,6 +65,8 @@ export function codeLangClass(codeLang: string | null): string {
       return 'r';
     case 'julia':
       return 'julia';
+    case 'bash':
+      return 'bash';
     default:
       return 'all';
   }

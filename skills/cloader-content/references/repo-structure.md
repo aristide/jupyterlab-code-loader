@@ -164,7 +164,7 @@ snippet_files:
 | `title`          | string   | Yes      | Display title (English default)             |
 | `description`    | string   | Yes      | Short description (English default)         |
 | `type`           | enum     | Yes      | `notebook`, `script`                        |
-| `code_lang`      | enum     | Yes      | `python`, `r`, `julia`                      |
+| `code_lang`      | enum     | Yes      | `python`, `r`, `julia`, `bash`              |
 | `difficulty`     | enum     | No       | `beginner`, `intermediate`, `advanced`      |
 | `estimated_time` | string   | No       | e.g., `15min`, `1h`                         |
 | `tags`           | string[] | No       | Topic tags                                  |
@@ -223,7 +223,7 @@ Located at `domains/{domain_id}/snippets/{locale}/{filename}.json` or
 | `id`          | string   | Yes      | Unique within file                         |
 | `title`       | string   | Yes      | Display title                              |
 | `description` | string   | No       | Short description                          |
-| `code_lang`   | enum     | Yes      | `python`, `r`, `julia`                     |
+| `code_lang`   | enum     | Yes      | `python`, `r`, `julia`, `bash`             |
 | `lang`        | string   | Yes      | Content language code                      |
 | `tags`        | string[] | No       | Topic tags (default: `[]`)                 |
 | `code`        | string   | Yes      | The snippet code                           |
@@ -294,6 +294,7 @@ and 2 in English.
 | `.R`      | Script   | `r`         | Text editor     |
 | `.Rmd`    | Script   | `r`         | Text editor     |
 | `.jl`     | Script   | `julia`     | Text editor     |
+| `.sh`     | Script   | `bash`      | Text editor     |
 
 ---
 
@@ -317,4 +318,5 @@ The extension maps Jupyter kernel names to `code_lang` for filtering:
 | `python3`, `python`, `conda-*python*`, `ipykernel`, `xpython`, `pypy` | `python`             |
 | `ir`, `r`, `r4`                                                       | `r`                  |
 | `julia-*`, `julia`                                                    | `julia`              |
+| `bash`, `sh`                                                          | `bash`               |
 | Unknown / null                                                        | No filter (show all) |

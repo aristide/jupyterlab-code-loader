@@ -23,6 +23,38 @@ To remove the extension, execute:
 pip uninstall jupyterlab-code-loader
 ```
 
+## Configuration
+
+The extension is configured via the setup form on first launch, but all settings can also be controlled through environment variables. Environment variables override values in the config file (`~/.jupyter/code-loader.json`).
+
+### Environment variables
+
+| Variable                    | Description                                                    | Default                     |
+| --------------------------- | -------------------------------------------------------------- | --------------------------- |
+| `CLOADER_REPO_URL`          | Git repository URL containing code examples and snippets       | _(empty)_                   |
+| `CLOADER_BRANCH`            | Branch to track                                                | `main`                      |
+| `CLOADER_CACHE_DIR`         | Local directory for the cloned repository                      | `~/.jupyter/examples-cache` |
+| `CLOADER_REFRESH_INTERVAL`  | Cache refresh interval in seconds                              | `3600`                      |
+| `CLOADER_WORKSPACE_DIR`     | Directory where code examples are copied to                    | `~/examples`                |
+| `CLOADER_GIT_TOKEN`         | GitHub/GitLab personal access token for private repos          | _(empty)_                   |
+| `CLOADER_DEFAULT_LOCALE`    | Default content language code                                  | `en`                        |
+| `CLOADER_SUPPORTED_LOCALES` | Comma-separated list of supported locale codes                 | `en,fr`                     |
+| `CLOADER_ALLOW_RESET`       | Show reset button in sidebar (`1`, `true`, or `yes` to enable) | _(disabled)_                |
+
+### Example
+
+```bash
+export CLOADER_REPO_URL=https://github.com/myorg/examples-registry.git
+export CLOADER_BRANCH=main
+export CLOADER_SUPPORTED_LOCALES=en,fr,es
+export CLOADER_ALLOW_RESET=true
+jupyter lab
+```
+
+### Language detection
+
+The extension automatically detects the content language from JupyterLab's active language setting. If the detected language is not in the `CLOADER_SUPPORTED_LOCALES` list, English (`en`) is used as the fallback.
+
 ## Contributing
 
 ### Development install

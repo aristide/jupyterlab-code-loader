@@ -95,7 +95,7 @@ When creating **notebook files**, always use this kernel metadata structure:
 }
 ```
 
-Adapt `kernelspec` for R (`ir`) or Julia (`julia-1.10`) as needed.
+Adapt `kernelspec` for R (`ir`), Julia (`julia-1.10`), or Bash (`bash`) as needed.
 
 ### 4. Add or update snippets
 
@@ -155,7 +155,7 @@ This scans all `domains/*/manifest.yaml`, counts items, and writes a fresh `regi
 ## Important conventions
 
 - **English is canonical**: `en/` must contain every file. Other locales can be partial.
-- **code_lang values**: Only `python`, `r`, or `julia`. No aliases.
+- **code_lang values**: Only `python`, `r`, `julia`, or `bash`. No aliases.
 - **type values**: Only `notebook` or `script`.
 - **difficulty values**: Only `beginner`, `intermediate`, or `advanced`.
 - **Domain IDs**: URL-safe slugs — lowercase alphanumeric with hyphens.

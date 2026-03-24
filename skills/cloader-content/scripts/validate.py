@@ -14,7 +14,7 @@ try:
 except ImportError:
     yaml = None
 
-VALID_CODE_LANGS = {"python", "r", "julia"}
+VALID_CODE_LANGS = {"python", "r", "julia", "bash"}
 VALID_TYPES = {"notebook", "script"}
 VALID_DIFFICULTIES = {"beginner", "intermediate", "advanced"}
 
