@@ -24,6 +24,17 @@ export function createSnippetRow(
   const actions = document.createElement('div');
   actions.className = 'jp-CodeLoader-snippet-actions';
 
+  // Insert button
+  const insertBtn = document.createElement('button');
+  insertBtn.className = 'jp-CodeLoader-snippet-actionBtn';
+  insertBtn.textContent = '\u2B9E';
+  insertBtn.title = 'Insert into notebook';
+  insertBtn.addEventListener('click', (e: Event) => {
+    e.stopPropagation();
+    onInsert(snippet);
+  });
+  actions.appendChild(insertBtn);
+
   // Terminal copy button (bash only)
   if (snippet.code_lang === 'bash') {
     const termBtn = document.createElement('button');
@@ -77,11 +88,6 @@ export function createSnippetRow(
   row.appendChild(titleLine);
   row.appendChild(preview);
   row.appendChild(badgeLine);
-
-  // Click row to insert into notebook
-  row.addEventListener('click', () => {
-    onInsert(snippet);
-  });
 
   row.title = snippet.code;
 

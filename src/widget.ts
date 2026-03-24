@@ -539,11 +539,29 @@ export class CodeLoaderWidget extends Widget {
     const activeIndex = notebook.content.activeCellIndex;
     const activeCell = notebook.content.activeCell;
 
-    // If the active cell is empty, replace its content
-    if (activeCell && !activeCell.model.sharedModel.getSource().trim()) {
+    if (!activeCell) {
+      nbModel.sharedModel.insertCell(activeIndex + 1, {
+        cell_type: 'code',
+        source: code
+      });
+      notebook.content.activeCellIndex = activeIndex + 1;
+      return;
+    }
+
+    const source = activeCell.model.sharedModel.getSource();
+
+    if (!source.trim()) {
+      // Empty cell — replace content
       activeCell.model.sharedModel.setSource(code);
+    } else if (activeCell.editor) {
+      // Cell has content — insert at cursor position
+      const editor = activeCell.editor;
+      const cursor = editor.getCursorPosition();
+      const offset = editor.getOffsetAt(cursor);
+      const newSource = source.slice(0, offset) + code + source.slice(offset);
+      activeCell.model.sharedModel.setSource(newSource);
     } else {
-      // Insert a new cell below
+      // Fallback — insert new cell below
       nbModel.sharedModel.insertCell(activeIndex + 1, {
         cell_type: 'code',
         source: code

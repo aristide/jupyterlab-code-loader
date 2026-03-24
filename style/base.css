@@ -316,7 +316,6 @@ details[open] > .jp-CodeLoader-accordionHeader::before {
   padding: 8px;
   margin-bottom: 4px;
   border-radius: 4px;
-  cursor: pointer;
   transition: background-color 0.1s;
 }
 
