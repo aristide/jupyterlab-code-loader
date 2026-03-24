@@ -44,7 +44,7 @@ import { createStatusBar } from './components/StatusBar';
 import { createSetupForm } from './components/SetupForm';
 
 const DEFAULT_LABELS: Record<string, string> = {
-  'sidebar.title': 'Examples & snippets',
+  'sidebar.title': 'Code & snippets',
   'tab.code': 'Code examples',
   'tab.snippets': 'Snippets',
   'search.code.placeholder': 'Search code examples...',

@@ -29,17 +29,17 @@ The extension is configured via the setup form on first launch, but all settings
 
 ### Environment variables
 
-| Variable                    | Description                                                    | Default                     |
-| --------------------------- | -------------------------------------------------------------- | --------------------------- |
-| `CLOADER_REPO_URL`          | Git repository URL containing code examples and snippets       | _(empty)_                   |
-| `CLOADER_BRANCH`            | Branch to track                                                | `main`                      |
-| `CLOADER_CACHE_DIR`         | Local directory for the cloned repository                      | `~/.jupyter/examples-cache` |
-| `CLOADER_REFRESH_INTERVAL`  | Cache refresh interval in seconds                              | `3600`                      |
-| `CLOADER_WORKSPACE_DIR`     | Directory where code examples are copied to                    | `~/examples`                |
-| `CLOADER_GIT_TOKEN`         | GitHub/GitLab personal access token for private repos          | _(empty)_                   |
-| `CLOADER_DEFAULT_LOCALE`    | Default content language code                                  | `en`                        |
-| `CLOADER_SUPPORTED_LOCALES` | Comma-separated list of supported locale codes                 | `en,fr`                     |
-| `CLOADER_ALLOW_RESET`       | Show reset button in sidebar (`1`, `true`, or `yes` to enable) | _(disabled)_                |
+| Variable                    | Description                                                      | Default                     |
+| --------------------------- | ---------------------------------------------------------------- | --------------------------- |
+| `CLOADER_REPO_URL`          | Git repository URL containing code examples and snippets         | _(empty)_                   |
+| `CLOADER_BRANCH`            | Branch to track                                                  | `main`                      |
+| `CLOADER_CACHE_DIR`         | Local directory for the cloned repository                        | `~/.jupyter/examples-cache` |
+| `CLOADER_REFRESH_INTERVAL`  | Cache refresh interval in seconds                                | `3600`                      |
+| `CLOADER_WORKSPACE_DIR`     | Directory where code examples are copied to                      | `~/examples`                |
+| `CLOADER_GIT_TOKEN`         | GitHub/GitLab personal access token for private repos            | _(empty)_                   |
+| `CLOADER_DEFAULT_LOCALE`    | Default content language code                                    | `en`                        |
+| `CLOADER_SUPPORTED_LOCALES` | Comma-separated list of supported locale codes                   | `en,fr`                     |
+| `CLOADER_ALLOW_RESET`       | Show reset button in sidebar (set `0`, `false`, or `no` to hide) | _(enabled)_                 |
 
 ### Example
 

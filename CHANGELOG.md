@@ -4,6 +4,7 @@
 
 ### Added
 
+- "Open" button on code example rows to copy the file to the workspace and open it.
 - Smart snippet insertion: inserts into compatible open notebook or creates a new notebook with the correct kernel. Empty active cells are populated in-place.
 - Bash snippets get a "Copy for terminal" button that formats commands as a single pasteable line with `&&` joins.
 - Bash script and snippet support (`bash` code_lang, `.sh` file type, bash/sh kernel mapping).
@@ -14,6 +15,9 @@
 
 ### Changed
 
+- Sidebar title changed from "Examples & snippets" to "Code & snippets".
+- Reset button is now enabled by default; set `CLOADER_ALLOW_RESET=false` to hide it.
+- Reset now also deletes the local cache directory to free disk space.
 - Removed locale selection from the setup form. Content language is now auto-detected from JupyterLab settings.
 - `supported_locales` and `allow_reset` fields are now included in the config API response.
 

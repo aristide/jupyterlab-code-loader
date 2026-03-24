@@ -7,14 +7,14 @@ import { ICodeItem } from '../model';
 export function createCodeItemRow(
   item: ICodeItem,
   domainId: string,
-  onDoubleClick: (domain: string, file: string) => void,
+  onOpen: (domain: string, file: string) => void,
   difficultyLabels: Record<string, string>
 ): HTMLElement {
   const row = document.createElement('div');
   row.className = 'jp-CodeLoader-codeItem';
   row.title = item.description;
 
-  // Title line
+  // Title line with open button
   const titleLine = document.createElement('div');
   titleLine.className = 'jp-CodeLoader-codeItem-title';
 
@@ -22,22 +22,35 @@ export function createCodeItemRow(
   const icon = document.createElement('span');
   icon.className = 'jp-CodeLoader-codeItem-icon';
   if (item.file.endsWith('.ipynb')) {
-    icon.textContent = '\uD83D\uDCD3'; // notebook emoji
+    icon.textContent = '\uD83D\uDCD3';
     icon.title = 'Notebook';
   } else if (item.file.endsWith('.py')) {
-    icon.textContent = '\uD83D\uDC0D'; // python emoji
+    icon.textContent = '\uD83D\uDC0D';
     icon.title = 'Python script';
   } else if (item.file.endsWith('.R') || item.file.endsWith('.Rmd')) {
-    icon.textContent = '\uD83D\uDCCA'; // chart emoji
+    icon.textContent = '\uD83D\uDCCA';
     icon.title = 'R script';
+  } else if (item.file.endsWith('.sh')) {
+    icon.textContent = '\uD83D\uDCBB';
+    icon.title = 'Bash script';
   } else {
-    icon.textContent = '\uD83D\uDCC4'; // document emoji
+    icon.textContent = '\uD83D\uDCC4';
     icon.title = 'Script';
   }
 
   const titleText = document.createElement('span');
   titleText.className = 'jp-CodeLoader-codeItem-titleText';
   titleText.textContent = item.title;
+
+  // Open button
+  const openBtn = document.createElement('button');
+  openBtn.className = 'jp-CodeLoader-codeItem-openBtn';
+  openBtn.textContent = '\u2B9E';
+  openBtn.title = 'Copy to workspace and open';
+  openBtn.addEventListener('click', (e: Event) => {
+    e.stopPropagation();
+    onOpen(domainId, item.file);
+  });
 
   titleLine.appendChild(icon);
   titleLine.appendChild(titleText);
@@ -50,9 +63,9 @@ export function createCodeItemRow(
     translated.textContent = '\u2713';
     translated.title = 'Translated';
     titleLine.appendChild(translated);
-  } else if (item._resolved_locale !== 'en' || item._content_lang !== 'en') {
-    // Falls back to English
   }
+
+  titleLine.appendChild(openBtn);
 
   // Metadata line
   const metaLine = document.createElement('div');
@@ -92,15 +105,9 @@ export function createCodeItemRow(
   row.appendChild(titleLine);
   row.appendChild(metaLine);
 
-  // Only add badge line if it has content
   if (badgeLine.children.length > 0) {
     row.appendChild(badgeLine);
   }
-
-  // Double-click to copy and open
-  row.addEventListener('dblclick', () => {
-    onDoubleClick(domainId, item.file);
-  });
 
   return row;
 }

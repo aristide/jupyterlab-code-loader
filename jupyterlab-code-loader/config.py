@@ -7,6 +7,7 @@ If environment variables are set at startup, they are persisted to the config fi
 import json
 import logging
 import os
+import shutil
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -85,13 +86,27 @@ class Config:
 
     @classmethod
     def reset(cls) -> "Config":
-        """Delete config file and reload from env vars / defaults."""
+        """Delete config file and local cache, reload from env vars / defaults."""
+        # Read current cache_dir before deleting config
+        old_config = _read_config_file()
+        cache_dir = old_config.get("cache_dir", DEFAULTS["cache_dir"])
+
         try:
             if CONFIG_FILE_PATH.exists():
                 CONFIG_FILE_PATH.unlink()
                 logger.info(f"Config file deleted: {CONFIG_FILE_PATH}")
         except Exception as e:
             logger.warning(f"Failed to delete config file: {e}")
+
+        # Clean up local cache to free disk space
+        cache_path = Path(cache_dir).expanduser()
+        try:
+            if cache_path.exists():
+                shutil.rmtree(cache_path)
+                logger.info(f"Cache directory deleted: {cache_path}")
+        except Exception as e:
+            logger.warning(f"Failed to delete cache directory: {e}")
+
         return cls.load()
 
     def to_dict(self) -> dict:
@@ -164,9 +179,11 @@ def _apply_dict(config: Config, data: dict):
 
 
 def _read_allow_reset() -> bool:
-    """Read CLOADER_ALLOW_RESET env var. Truthy values: 1, true, yes."""
+    """Read CLOADER_ALLOW_RESET env var. Enabled by default; set 0/false/no to disable."""
     value = os.environ.get("CLOADER_ALLOW_RESET", "").strip().lower()
-    return value in ("1", "true", "yes")
+    if value in ("0", "false", "no"):
+        return False
+    return True
 
 
 def _read_supported_locales() -> list:
