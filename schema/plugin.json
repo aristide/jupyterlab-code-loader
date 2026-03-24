@@ -1,0 +1,8 @@
+{
+  "jupyter.lab.shortcuts": [],
+  "title": "jupyterlab-code-loader",
+  "description": "jupyterlab-code-loader settings.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

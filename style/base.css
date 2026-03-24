@@ -1,0 +1,481 @@
+/* jupyterlab-code-loader sidebar styles */
+
+/* ---- Main container ---- */
+.jp-CodeLoader {
+  background-color: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color1);
+  font-family: var(--jp-ui-font-family);
+  font-size: var(--jp-ui-font-size1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---- Header ---- */
+.jp-CodeLoader-header {
+  padding: 12px 12px 4px;
+  border-bottom: 1px solid var(--jp-border-color2);
+  flex-shrink: 0;
+}
+
+.jp-CodeLoader-title {
+  margin: 0;
+  font-size: var(--jp-ui-font-size2);
+  font-weight: 600;
+  color: var(--jp-ui-font-color0);
+}
+
+/* ---- Kernel indicator ---- */
+.jp-CodeLoader-kernelStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 8px;
+  flex-shrink: 0;
+}
+
+.jp-CodeLoader-kernelPill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.jp-CodeLoader-kernelPill--python {
+  background-color: #2196f3;
+}
+
+.jp-CodeLoader-kernelPill--r {
+  background-color: #4caf50;
+}
+
+.jp-CodeLoader-kernelPill--julia {
+  background-color: #9c27b0;
+}
+
+.jp-CodeLoader-kernelPill--all {
+  background-color: #9e9e9e;
+}
+
+.jp-CodeLoader-kernelText {
+  font-size: 11px;
+  color: var(--jp-ui-font-color2);
+}
+
+/* ---- Tab bar ---- */
+.jp-CodeLoader-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--jp-border-color2);
+  flex-shrink: 0;
+}
+
+.jp-CodeLoader-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: var(--jp-ui-font-size1);
+  color: var(--jp-ui-font-color2);
+  border-bottom: 2px solid transparent;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.jp-CodeLoader-tab:hover {
+  color: var(--jp-ui-font-color0);
+}
+
+.jp-CodeLoader-tab--active {
+  color: var(--jp-brand-color1);
+  border-bottom-color: var(--jp-brand-color1);
+  font-weight: 600;
+}
+
+/* ---- Search bar ---- */
+.jp-CodeLoader-search {
+  padding: 8px 12px;
+  flex-shrink: 0;
+}
+
+.jp-CodeLoader-searchInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 4px;
+  background-color: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color1);
+  font-size: var(--jp-ui-font-size1);
+  outline: none;
+}
+
+.jp-CodeLoader-searchInput:focus {
+  border-color: var(--jp-brand-color1);
+  box-shadow: 0 0 0 1px var(--jp-brand-color1);
+}
+
+.jp-CodeLoader-searchInput::placeholder {
+  color: var(--jp-ui-font-color3);
+}
+
+/* ---- Content area ---- */
+.jp-CodeLoader-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* ---- Domain accordion ---- */
+.jp-CodeLoader-accordion {
+  border-bottom: 1px solid var(--jp-border-color2);
+}
+
+.jp-CodeLoader-accordion--empty {
+  opacity: 0.5;
+}
+
+.jp-CodeLoader-accordionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--jp-ui-font-size1);
+  color: var(--jp-ui-font-color0);
+  user-select: none;
+  list-style: none;
+}
+
+.jp-CodeLoader-accordionHeader::-webkit-details-marker {
+  display: none;
+}
+
+.jp-CodeLoader-accordionHeader::before {
+  content: '\25B6';
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 10px;
+  transition: transform 0.15s;
+}
+
+details[open] > .jp-CodeLoader-accordionHeader::before {
+  transform: rotate(90deg);
+}
+
+.jp-CodeLoader-accordionTitle {
+  flex: 1;
+}
+
+.jp-CodeLoader-accordionCount {
+  background-color: var(--jp-layout-color2);
+  color: var(--jp-ui-font-color2);
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.jp-CodeLoader-accordionContent {
+  padding: 0 12px 8px;
+}
+
+/* ---- Code item row ---- */
+.jp-CodeLoader-codeItem {
+  padding: 8px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.jp-CodeLoader-codeItem:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+.jp-CodeLoader-codeItem-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.jp-CodeLoader-codeItem-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.jp-CodeLoader-codeItem-titleText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jp-CodeLoader-codeItem-meta {
+  font-size: 11px;
+  color: var(--jp-ui-font-color2);
+  margin-top: 2px;
+  padding-left: 22px;
+}
+
+.jp-CodeLoader-codeItem-badges {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  padding-left: 22px;
+  flex-wrap: wrap;
+}
+
+/* ---- Badges ---- */
+.jp-CodeLoader-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.jp-CodeLoader-badge--lang {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.jp-CodeLoader-badge--code {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.jp-CodeLoader-badge--tag {
+  background-color: var(--jp-layout-color2);
+  color: var(--jp-ui-font-color2);
+}
+
+.jp-CodeLoader-badge--translated {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* Dark theme badge adjustments */
+[data-jp-theme-light='false'] .jp-CodeLoader-badge--lang {
+  background-color: #1a237e;
+  color: #90caf9;
+}
+
+[data-jp-theme-light='false'] .jp-CodeLoader-badge--code {
+  background-color: #4a148c;
+  color: #ce93d8;
+}
+
+[data-jp-theme-light='false'] .jp-CodeLoader-badge--translated {
+  background-color: #1b5e20;
+  color: #a5d6a7;
+}
+
+/* ---- Snippet row ---- */
+.jp-CodeLoader-snippet {
+  padding: 8px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.jp-CodeLoader-snippet:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+.jp-CodeLoader-snippet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.jp-CodeLoader-snippet-title {
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jp-CodeLoader-snippet-copyBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 14px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.jp-CodeLoader-snippet-copyBtn:hover {
+  opacity: 1;
+  background-color: var(--jp-layout-color2);
+}
+
+.jp-CodeLoader-snippet-preview {
+  margin-top: 4px;
+  padding: 4px 8px;
+  background-color: var(--jp-layout-color2);
+  border-radius: 3px;
+  font-family: var(--jp-code-font-family);
+  font-size: var(--jp-code-font-size);
+  color: var(--jp-content-font-color2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jp-CodeLoader-snippet-badges {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+/* ---- Hidden items notice ---- */
+.jp-CodeLoader-hiddenNotice {
+  font-size: 11px;
+  color: var(--jp-ui-font-color3);
+  font-style: italic;
+  padding: 4px 0;
+}
+
+/* ---- Status bar (footer) ---- */
+.jp-CodeLoader-statusContainer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--jp-border-color2);
+}
+
+.jp-CodeLoader-status {
+  padding: 8px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--jp-ui-font-color2);
+}
+
+.jp-CodeLoader-status-sync {
+  flex: 1;
+}
+
+.jp-CodeLoader-status-counts {
+  flex-basis: 100%;
+  font-size: 11px;
+}
+
+.jp-CodeLoader-status-refreshBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--jp-brand-color1);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 4px;
+}
+
+.jp-CodeLoader-status-refreshBtn:hover {
+  text-decoration: underline;
+}
+
+/* ---- Error state ---- */
+.jp-CodeLoader-error {
+  padding: 20px 12px;
+  color: var(--jp-error-color1);
+  text-align: center;
+}
+
+/* ---- Setup form ---- */
+.jp-CodeLoader-setupForm {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.jp-CodeLoader-setupForm-title {
+  margin: 0;
+  font-size: var(--jp-ui-font-size2);
+  font-weight: 600;
+  color: var(--jp-ui-font-color0);
+}
+
+.jp-CodeLoader-setupForm-desc {
+  margin: 0;
+  font-size: var(--jp-ui-font-size1);
+  color: var(--jp-ui-font-color2);
+  line-height: 1.4;
+}
+
+.jp-CodeLoader-setupForm-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.jp-CodeLoader-setupForm-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jp-CodeLoader-setupForm-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--jp-ui-font-color1);
+}
+
+.jp-CodeLoader-setupForm-required {
+  color: var(--jp-error-color1);
+}
+
+.jp-CodeLoader-setupForm-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 4px;
+  background-color: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color1);
+  font-size: var(--jp-ui-font-size1);
+}
+
+.jp-CodeLoader-setupForm-input:focus {
+  border-color: var(--jp-brand-color1);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--jp-brand-color1);
+}
+
+.jp-CodeLoader-setupForm-connectBtn {
+  align-self: flex-start;
+  padding: 8px 24px;
+  font-size: var(--jp-ui-font-size1);
+  cursor: pointer;
+}
+
+.jp-CodeLoader-setupForm-connectBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jp-CodeLoader-setupForm-error {
+  color: var(--jp-error-color1);
+  font-size: 12px;
+}
+
+.jp-CodeLoader-setupForm-status {
+  color: var(--jp-brand-color1);
+  font-size: 12px;
+  font-style: italic;
+}
