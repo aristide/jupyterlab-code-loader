@@ -1,19 +1,10 @@
 /**
  * Setup form component shown when no repository URL is configured.
- * Collects repo URL, branch, token, and locale from the user.
+ * Collects repo URL, branch, and token from the user.
+ * Content language is auto-detected from JupyterLab settings.
  */
 
 import { requestAPI } from '../handler';
-
-const LOCALE_LABELS: Record<string, string> = {
-  en: 'English',
-  fr: 'Fran\u00e7ais',
-  es: 'Espa\u00f1ol',
-  pt: 'Portugu\u00eas',
-  ar: '\u0627\u0644\u0639\u0631\u0628\u064a\u0629',
-  zh: '\u4e2d\u6587',
-  ru: '\u0420\u0443\u0441\u0441\u043a\u0438\u0439'
-};
 
 export function createSetupForm(onConfigSaved: () => void): HTMLElement {
   const container = document.createElement('div');
@@ -95,39 +86,8 @@ export function createSetupForm(onConfigSaved: () => void): HTMLElement {
   );
   authSection.appendChild(tokenGroup);
 
-  // Section: Preferences
-  const prefSection = _createSection('Preferences');
-
-  const localeGroup = document.createElement('div');
-  localeGroup.className = 'jp-CodeLoader-setup-group';
-
-  const localeHeader = document.createElement('div');
-  localeHeader.className = 'jp-CodeLoader-setup-labelRow';
-
-  const localeLabel = document.createElement('label');
-  localeLabel.className = 'jp-CodeLoader-setup-label';
-  localeLabel.textContent = 'Content language';
-
-  localeHeader.appendChild(localeLabel);
-
-  const localeSelect = document.createElement('select');
-  localeSelect.className = 'jp-CodeLoader-setup-input';
-  localeSelect.dataset.field = 'default_locale';
-
-  for (const [code, name] of Object.entries(LOCALE_LABELS)) {
-    const opt = document.createElement('option');
-    opt.value = code;
-    opt.textContent = `${name}`;
-    localeSelect.appendChild(opt);
-  }
-
-  localeGroup.appendChild(localeHeader);
-  localeGroup.appendChild(localeSelect);
-  prefSection.appendChild(localeGroup);
-
   card.appendChild(repoSection);
   card.appendChild(authSection);
-  card.appendChild(prefSection);
 
   // ── Feedback area ──
   const feedback = document.createElement('div');
@@ -198,8 +158,7 @@ export function createSetupForm(onConfigSaved: () => void): HTMLElement {
 
     const config: Record<string, string> = {
       repo_url: repoUrl,
-      branch: branchInput.value || 'main',
-      default_locale: localeSelect.value || 'en'
+      branch: branchInput.value || 'main'
     };
 
     const tokenInput = container.querySelector(

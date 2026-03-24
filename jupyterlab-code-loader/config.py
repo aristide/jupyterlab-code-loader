@@ -83,6 +83,17 @@ class Config:
         except Exception as e:
             logger.warning(f"Failed to save config: {e}")
 
+    @classmethod
+    def reset(cls) -> "Config":
+        """Delete config file and reload from env vars / defaults."""
+        try:
+            if CONFIG_FILE_PATH.exists():
+                CONFIG_FILE_PATH.unlink()
+                logger.info(f"Config file deleted: {CONFIG_FILE_PATH}")
+        except Exception as e:
+            logger.warning(f"Failed to delete config file: {e}")
+        return cls.load()
+
     def to_dict(self) -> dict:
         """Return config as a dictionary (excluding sensitive git_token)."""
         return {
@@ -94,6 +105,8 @@ class Config:
             "default_locale": self.default_locale,
             "has_token": bool(self.git_token),
             "is_configured": bool(self.repo_url),
+            "allow_reset": _read_allow_reset(),
+            "supported_locales": _read_supported_locales(),
         }
 
     def repo_url_with_auth(self) -> str:
@@ -148,3 +161,15 @@ def _apply_dict(config: Config, data: dict):
         config.git_token = data["git_token"]
     if "default_locale" in data:
         config.default_locale = data["default_locale"]
+
+
+def _read_allow_reset() -> bool:
+    """Read CLOADER_ALLOW_RESET env var. Truthy values: 1, true, yes."""
+    value = os.environ.get("CLOADER_ALLOW_RESET", "").strip().lower()
+    return value in ("1", "true", "yes")
+
+
+def _read_supported_locales() -> list:
+    """Read CLOADER_SUPPORTED_LOCALES env var. Default: en,fr."""
+    raw = os.environ.get("CLOADER_SUPPORTED_LOCALES", "en,fr")
+    return [loc.strip() for loc in raw.split(",") if loc.strip()]

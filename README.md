@@ -97,3 +97,70 @@ More information are provided within the [ui-tests](./ui-tests/README.md) README
 ### Packaging the extension
 
 See [RELEASE](RELEASE.md)
+
+## Claude Code Skill: Content Manager
+
+This repository includes a Claude Code skill (`cloader-content`) that helps populate and manage Git repositories consumed by the extension.
+
+### What the skill does
+
+- Scaffold new examples repositories with the correct structure
+- Add domains, code examples (notebooks, scripts), and snippets
+- Add translations for existing content
+- Validate repository structure against the expected schema
+- Regenerate the `registry.json` index
+
+### Installing the skill
+
+From the extension repository root, run:
+
+```bash
+# Using the Claude Code CLI
+claude skill install skills/cloader-content
+```
+
+Or manually symlink it:
+
+```bash
+mkdir -p ~/.claude/skills
+ln -s "$(pwd)/skills/cloader-content" ~/.claude/skills/cloader-content
+```
+
+### Usage
+
+Once installed, the skill triggers automatically in Claude Code when you ask to manage code-loader content. Examples:
+
+```
+> Scaffold a new examples repository at ~/my-examples
+> Add a "data-science" domain with a pandas intro notebook
+> Add a Python snippet for reading CSV files to the data-science domain
+> Validate the repository at ~/my-examples
+> Rebuild the registry for ~/my-examples
+```
+
+### Updating the skill
+
+When the extension repository is updated with a new version of the skill, pull the latest changes and re-install:
+
+```bash
+# Pull latest changes
+git pull
+
+# If installed via CLI, re-install to pick up changes
+claude skill install skills/cloader-content
+
+# If installed via symlink, no action needed — the symlink already points
+# to the latest version in the repo
+```
+
+### Standalone scripts
+
+The skill includes helper scripts that can be run directly:
+
+```bash
+# Validate repository structure
+python skills/cloader-content/scripts/validate.py /path/to/repo
+
+# Rebuild registry.json from manifests
+python skills/cloader-content/scripts/build_registry.py /path/to/repo --repo-url https://github.com/org/repo
+```

@@ -87,6 +87,9 @@ export class CodeLoaderWidget extends Widget {
   private allSnippetItems: Map<string, ISnippetFile[]> = new Map();
   private lastSync: string | null = null;
 
+  // Config flags
+  private allowReset = false;
+
   // DOM references
   private headerEl: HTMLElement | null = null;
   private kernelIndicatorEl: HTMLElement | null = null;
@@ -112,6 +115,7 @@ export class CodeLoaderWidget extends Widget {
     // Check if extension is configured
     try {
       const config = await requestAPI<IConfig>('config');
+      this.allowReset = config.allow_reset;
       if (!config.is_configured) {
         this._renderSetupForm();
         return;
@@ -173,6 +177,22 @@ export class CodeLoaderWidget extends Widget {
     titleEl.textContent = this._t('sidebar.title');
 
     this.headerEl.appendChild(titleEl);
+
+    if (this.allowReset) {
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'jp-CodeLoader-resetBtn';
+      resetBtn.title = 'Reset configuration';
+      resetBtn.innerHTML =
+        '<svg viewBox="0 0 16 16" width="14" height="14">' +
+        '<path fill="currentColor" d="M2 2.5A2.5 2.5 0 0 1 4.5 0h5.75a.75.75 0 0 1' +
+        ' .53.22l3.5 3.5a.75.75 0 0 1 .22.53V12.5A2.5 2.5 0 0 1 12 15H4.5A2.5' +
+        ' 2.5 0 0 1 2 12.5v-10zm6.75 4.25a.75.75 0 0 0-1.5 0v2.5a.75.75 0 0 0' +
+        ' 1.5 0v-2.5zM8 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>';
+      resetBtn.addEventListener('click', () => {
+        this._handleReset();
+      });
+      this.headerEl.appendChild(resetBtn);
+    }
 
     // Kernel indicator
     this.kernelIndicatorEl = createKernelIndicator(
@@ -537,6 +557,24 @@ export class CodeLoaderWidget extends Widget {
       await this._loadRegistry();
     } catch (e) {
       console.error('Failed to refresh cache:', e);
+    }
+  }
+
+  private async _handleReset(): Promise<void> {
+    const confirmed = window.confirm(
+      'Reset configuration? This will clear all settings and return to the setup form.'
+    );
+    if (!confirmed) {
+      return;
+    }
+    try {
+      await requestAPI('config', { method: 'DELETE' });
+      this.allCodeItems.clear();
+      this.allSnippetItems.clear();
+      this.domains = [];
+      this._renderSetupForm();
+    } catch (e) {
+      console.error('Failed to reset configuration:', e);
     }
   }
 }

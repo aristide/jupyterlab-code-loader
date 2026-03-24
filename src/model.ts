@@ -96,6 +96,8 @@ export interface IConfig {
   default_locale: string;
   has_token: boolean;
   is_configured: boolean;
+  allow_reset: boolean;
+  supported_locales: string[];
 }
 
 export interface ISyncResult {

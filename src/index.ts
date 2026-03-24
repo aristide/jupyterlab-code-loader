@@ -12,8 +12,9 @@ import {
 import { ITranslator } from '@jupyterlab/translation';
 import { INotebookTracker } from '@jupyterlab/notebook';
 import { CodeLoaderWidget } from './widget';
-import { setLocale } from './handler';
+import { requestAPI, setLocale } from './handler';
 import { codeLoaderIcon } from './icons';
+import { IConfig } from './model';
 
 const PLUGIN_ID = 'jupyterlab-code-loader:plugin';
 
@@ -22,14 +23,24 @@ const plugin: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [ILayoutRestorer],
   optional: [INotebookTracker, ITranslator],
-  activate: (
+  activate: async (
     app: JupyterFrontEnd,
     restorer: ILayoutRestorer,
     notebookTracker: INotebookTracker | null,
     translator: ITranslator | null
   ) => {
-    // Set locale from JupyterLab translator
-    const locale = (translator && (translator as any).languageCode) || 'en';
+    // Detect JupyterLab language code
+    const jlLocale = (translator && (translator as any).languageCode) || 'en';
+
+    // Fetch supported locales from backend and validate
+    let locale = 'en';
+    try {
+      const config = await requestAPI<IConfig>('config');
+      const supported = config.supported_locales || ['en', 'fr'];
+      locale = supported.includes(jlLocale) ? jlLocale : 'en';
+    } catch {
+      // Fallback to en if config fetch fails
+    }
     setLocale(locale);
 
     // Create the sidebar widget

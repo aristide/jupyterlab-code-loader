@@ -279,11 +279,20 @@ class CoverageHandler(APIHandler):
 
 
 class ConfigHandler(APIHandler):
-    """GET/POST /api/examples/config — read or update extension config."""
+    """GET/POST/DELETE /api/examples/config — read, update, or reset config."""
 
     def get(self):
         config: Config = self.settings["code_loader_config"]
         self.finish(json.dumps(config.to_dict()))
+
+    def delete(self):
+        new_config = Config.reset()
+        self.settings["code_loader_config"] = new_config
+        sync: GitSync = self.settings["code_loader_git_sync"]
+        sync.config = new_config
+        resolver: LocaleResolver = self.settings["code_loader_locale_resolver"]
+        resolver.config = new_config
+        self.finish(json.dumps(new_config.to_dict()))
 
     def post(self):
         config: Config = self.settings["code_loader_config"]
