@@ -144,19 +144,24 @@ This repository includes a Claude Code skill (`cloader-content`) that helps popu
 
 ### Installing the skill
 
-From the extension repository root, run:
+Claude Code discovers skills automatically from `.claude/skills/` directories. Choose the scope that fits your needs:
+
+**Project-level** (available when working in this repo):
 
 ```bash
-# Using the Claude Code CLI
-claude skill install skills/cloader-content
+mkdir -p .claude/skills
+cp -r skills/cloader-content .claude/skills/
 ```
 
-Or manually symlink it:
+**Personal** (available across all your projects):
 
 ```bash
+# Symlink so updates are picked up automatically
 mkdir -p ~/.claude/skills
 ln -s "$(pwd)/skills/cloader-content" ~/.claude/skills/cloader-content
 ```
+
+No restart needed — Claude Code detects skills immediately.
 
 ### Usage
 
@@ -172,17 +177,14 @@ Once installed, the skill triggers automatically in Claude Code when you ask to 
 
 ### Updating the skill
 
-When the extension repository is updated with a new version of the skill, pull the latest changes and re-install:
-
 ```bash
-# Pull latest changes
 git pull
 
-# If installed via CLI, re-install to pick up changes
-claude skill install skills/cloader-content
+# If installed via symlink — no action needed, it already points to the repo.
 
-# If installed via symlink, no action needed — the symlink already points
-# to the latest version in the repo
+# If installed via copy, re-copy to pick up changes:
+cp -r skills/cloader-content .claude/skills/    # project-level
+cp -r skills/cloader-content ~/.claude/skills/   # personal
 ```
 
 ### Standalone scripts
