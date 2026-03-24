@@ -209,8 +209,16 @@ class CopyHandler(APIHandler):
             if dep_src.exists() and not dep_dest.exists():
                 shutil.copy2(dep_src, dep_dest)
 
+        # Return path relative to Jupyter server root for docmanager:open
+        server_root = Path(self.contents_manager.root_dir)
+        try:
+            relative_path = dest.relative_to(server_root)
+        except ValueError:
+            # dest is outside server root — return absolute as fallback
+            relative_path = dest
+
         self.finish(json.dumps({
-            "path": str(dest),
+            "path": str(relative_path),
             "filename": dest.name,
             "resolved_locale": resolved,
             "is_translated": is_tr,
