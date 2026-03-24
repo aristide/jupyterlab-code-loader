@@ -20,6 +20,7 @@ Read the skill instructions at `skills/cloader-content/SKILL.md` for the full wo
 $ARGUMENTS
 
 If no arguments were provided, ask the user what they would like to do:
+
 - Scaffold a new examples repository
 - Add a new domain
 - Add code examples (notebooks, scripts) to a domain

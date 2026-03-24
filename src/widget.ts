@@ -9,7 +9,7 @@ import { Widget } from '@lumino/widgets';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { INotebookTracker } from '@jupyterlab/notebook';
 import { requestAPI } from './handler';
-import { kernelToCodeLang } from './kernel_map';
+import { kernelToCodeLang, codeLangToKernel } from './kernel_map';
 import {
   ICodeItem,
   ISnippetFile,
@@ -427,7 +427,8 @@ export class CodeLoaderWidget extends Widget {
           const row = createSnippetRow(
             snippet,
             s => this._insertSnippet(s),
-            s => this._copyToClipboard(s)
+            s => this._copyToClipboard(s),
+            s => this._copyForTerminal(s)
           );
           content.appendChild(row);
         }
@@ -505,32 +506,76 @@ export class CodeLoaderWidget extends Widget {
     }
   }
 
-  private _insertSnippet(snippet: ISnippet): void {
-    if (!this.notebookTracker) {
-      return;
-    }
-
-    const notebook = this.notebookTracker.currentWidget;
-    if (!notebook) {
-      // Fallback: copy to clipboard
-      this._copyToClipboard(snippet);
-      return;
-    }
-
+  private async _insertSnippet(snippet: ISnippet): Promise<void> {
     const code =
       snippet.imports.length > 0
         ? snippet.imports.join('\n') + '\n\n' + snippet.code
         : snippet.code;
 
-    // Insert a new cell below current with the snippet code
+    const notebook = this.notebookTracker?.currentWidget;
+
+    if (notebook) {
+      // Check kernel compatibility
+      const session = notebook.sessionContext;
+      const kernelName = session.session?.kernel?.name || null;
+      const nbLang = kernelToCodeLang(kernelName);
+
+      if (!nbLang || nbLang === snippet.code_lang) {
+        // Compatible — insert into active cell
+        this._insertCodeIntoNotebook(notebook, code);
+        return;
+      }
+    }
+
+    // No notebook or incompatible kernel — create a new one
+    await this._createNotebookAndInsert(snippet.code_lang, code);
+  }
+
+  private _insertCodeIntoNotebook(notebook: any, code: string): void {
     const nbModel = notebook.content.model;
-    if (nbModel) {
-      const activeCellIndex = notebook.content.activeCellIndex;
-      nbModel.sharedModel.insertCell(activeCellIndex + 1, {
+    if (!nbModel) {
+      return;
+    }
+    const activeIndex = notebook.content.activeCellIndex;
+    const activeCell = notebook.content.activeCell;
+
+    // If the active cell is empty, replace its content
+    if (activeCell && !activeCell.model.sharedModel.getSource().trim()) {
+      activeCell.model.sharedModel.setSource(code);
+    } else {
+      // Insert a new cell below
+      nbModel.sharedModel.insertCell(activeIndex + 1, {
         cell_type: 'code',
         source: code
       });
-      notebook.content.activeCellIndex = activeCellIndex + 1;
+      notebook.content.activeCellIndex = activeIndex + 1;
+    }
+  }
+
+  private async _createNotebookAndInsert(
+    codeLang: string,
+    code: string
+  ): Promise<void> {
+    try {
+      const kernelName = codeLangToKernel(codeLang);
+      await this.app.commands.execute('notebook:create-new', {
+        kernelName
+      });
+
+      // Wait for the new notebook to appear
+      const nb = this.notebookTracker?.currentWidget;
+      if (nb) {
+        await nb.sessionContext.ready;
+        this._insertCodeIntoNotebook(nb, code);
+      }
+    } catch (e) {
+      console.error('Failed to create notebook for snippet:', e);
+      // Last resort: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(code);
+      } catch {
+        // ignore
+      }
     }
   }
 
@@ -543,7 +588,23 @@ export class CodeLoaderWidget extends Widget {
     try {
       await navigator.clipboard.writeText(code);
     } catch {
-      // Fallback for environments without clipboard API
+      console.warn('Clipboard API not available');
+    }
+  }
+
+  private async _copyForTerminal(snippet: ISnippet): Promise<void> {
+    const lines: string[] = [];
+    if (snippet.imports.length > 0) {
+      lines.push(...snippet.imports);
+    }
+    lines.push(...snippet.code.split('\n').filter((l: string) => l.trim()));
+
+    // Join as a single pasteable command with && separators
+    const terminal = lines.length > 1 ? lines.join(' && ') : lines[0] || '';
+
+    try {
+      await navigator.clipboard.writeText(terminal);
+    } catch {
       console.warn('Clipboard API not available');
     }
   }

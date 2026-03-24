@@ -4,6 +4,8 @@
 
 ### Added
 
+- Smart snippet insertion: inserts into compatible open notebook or creates a new notebook with the correct kernel. Empty active cells are populated in-place.
+- Bash snippets get a "Copy for terminal" button that formats commands as a single pasteable line with `&&` joins.
 - Bash script and snippet support (`bash` code_lang, `.sh` file type, bash/sh kernel mapping).
 - Reset button on the sidebar toolbar to clear local configuration and return to the setup form. Visibility is controlled by the `CLOADER_ALLOW_RESET` environment variable (set to `1`, `true`, or `yes` to enable).
 - `CLOADER_SUPPORTED_LOCALES` environment variable to define supported content languages as a comma-separated list (default: `en,fr`).

@@ -37,6 +37,25 @@ export function kernelToCodeLang(kernelName: string | null): string | null {
 }
 
 /**
+ * Get the default kernel name for a code language (reverse mapping).
+ * Used when creating a new notebook for a snippet.
+ */
+export function codeLangToKernel(codeLang: string): string {
+  switch (codeLang) {
+    case 'python':
+      return 'python3';
+    case 'r':
+      return 'ir';
+    case 'julia':
+      return 'julia-1.10';
+    case 'bash':
+      return 'bash';
+    default:
+      return 'python3';
+  }
+}
+
+/**
  * Get a display label for a code language.
  */
 export function codeLangLabel(codeLang: string | null): string {

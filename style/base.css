@@ -338,18 +338,28 @@ details[open] > .jp-CodeLoader-accordionHeader::before {
   white-space: nowrap;
 }
 
-.jp-CodeLoader-snippet-copyBtn {
+.jp-CodeLoader-snippet-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.jp-CodeLoader-snippet-actionBtn {
   background: none;
   border: none;
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 3px;
-  font-size: 14px;
-  opacity: 0.6;
-  transition: opacity 0.15s;
+  font-size: 12px;
+  font-family: var(--jp-code-font-family);
+  opacity: 0.5;
+  color: var(--jp-ui-font-color1);
+  transition:
+    opacity 0.15s,
+    background-color 0.15s;
 }
 
-.jp-CodeLoader-snippet-copyBtn:hover {
+.jp-CodeLoader-snippet-actionBtn:hover {
   opacity: 1;
   background-color: var(--jp-layout-color2);
 }

@@ -7,12 +7,13 @@ import { ISnippet } from '../model';
 export function createSnippetRow(
   snippet: ISnippet,
   onInsert: (snippet: ISnippet) => void,
-  onCopy: (snippet: ISnippet) => void
+  onCopy: (snippet: ISnippet) => void,
+  onTerminalCopy: (snippet: ISnippet) => void
 ): HTMLElement {
   const row = document.createElement('div');
   row.className = 'jp-CodeLoader-snippet';
 
-  // Title line with copy button
+  // Title line with action buttons
   const titleLine = document.createElement('div');
   titleLine.className = 'jp-CodeLoader-snippet-header';
 
@@ -20,17 +21,35 @@ export function createSnippetRow(
   titleText.className = 'jp-CodeLoader-snippet-title';
   titleText.textContent = snippet.title;
 
+  const actions = document.createElement('div');
+  actions.className = 'jp-CodeLoader-snippet-actions';
+
+  // Terminal copy button (bash only)
+  if (snippet.code_lang === 'bash') {
+    const termBtn = document.createElement('button');
+    termBtn.className = 'jp-CodeLoader-snippet-actionBtn';
+    termBtn.textContent = '>_';
+    termBtn.title = 'Copy for terminal (single-line)';
+    termBtn.addEventListener('click', (e: Event) => {
+      e.stopPropagation();
+      onTerminalCopy(snippet);
+    });
+    actions.appendChild(termBtn);
+  }
+
+  // Copy button
   const copyBtn = document.createElement('button');
-  copyBtn.className = 'jp-CodeLoader-snippet-copyBtn';
-  copyBtn.textContent = '\uD83D\uDCCB'; // clipboard emoji
+  copyBtn.className = 'jp-CodeLoader-snippet-actionBtn';
+  copyBtn.textContent = '\uD83D\uDCCB';
   copyBtn.title = 'Copy to clipboard';
   copyBtn.addEventListener('click', (e: Event) => {
     e.stopPropagation();
     onCopy(snippet);
   });
+  actions.appendChild(copyBtn);
 
   titleLine.appendChild(titleText);
-  titleLine.appendChild(copyBtn);
+  titleLine.appendChild(actions);
 
   // Code preview
   const preview = document.createElement('div');
@@ -48,7 +67,6 @@ export function createSnippetRow(
   codeBadge.textContent = snippet.code_lang;
   badgeLine.appendChild(codeBadge);
 
-  // Topic tags
   for (const tag of snippet.tags) {
     const tagBadge = document.createElement('span');
     tagBadge.className = 'jp-CodeLoader-badge jp-CodeLoader-badge--tag';
@@ -60,12 +78,11 @@ export function createSnippetRow(
   row.appendChild(preview);
   row.appendChild(badgeLine);
 
-  // Click to insert into active cell
+  // Click row to insert into notebook
   row.addEventListener('click', () => {
     onInsert(snippet);
   });
 
-  // Full code tooltip on hover
   row.title = snippet.code;
 
   return row;
