@@ -195,7 +195,10 @@ class CopyHandler(APIHandler):
             self.set_status(404)
             return self.finish(json.dumps({"error": "File not found"}))
 
-        dest_dir = config.workspace_dir / domain_id
+        # Copy into a subdirectory of the Jupyter server root so
+        # JupyterLab can open the file via docmanager:open.
+        server_root = Path(self.contents_manager.root_dir).resolve()
+        dest_dir = server_root / "examples" / domain_id
         dest_dir.mkdir(parents=True, exist_ok=True)
         dest = dest_dir / filename
 
@@ -209,14 +212,7 @@ class CopyHandler(APIHandler):
             if dep_src.exists() and not dep_dest.exists():
                 shutil.copy2(dep_src, dep_dest)
 
-        # Return path relative to Jupyter server root for docmanager:open
-        server_root = Path(self.contents_manager.root_dir).resolve()
-        dest_resolved = dest.resolve()
-        try:
-            relative_path = dest_resolved.relative_to(server_root)
-        except ValueError:
-            # dest is outside server root — return absolute as fallback
-            relative_path = dest_resolved
+        relative_path = dest.relative_to(server_root)
 
         self.finish(json.dumps({
             "path": str(relative_path),
