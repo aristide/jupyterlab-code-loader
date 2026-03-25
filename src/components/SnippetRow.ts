@@ -4,11 +4,14 @@
 
 import { ISnippet } from '../model';
 
+type Labels = Record<string, string>;
+
 export function createSnippetRow(
   snippet: ISnippet,
   onInsert: (snippet: ISnippet) => void,
   onCopy: (snippet: ISnippet) => void,
-  onTerminalCopy: (snippet: ISnippet) => void
+  onTerminalCopy: (snippet: ISnippet) => void,
+  labels: Labels
 ): HTMLElement {
   const row = document.createElement('div');
   row.className = 'jp-CodeLoader-snippet';
@@ -28,19 +31,19 @@ export function createSnippetRow(
   const insertBtn = document.createElement('button');
   insertBtn.className = 'jp-CodeLoader-snippet-actionBtn';
   insertBtn.textContent = '\u2B9E';
-  insertBtn.title = 'Insert into notebook';
+  insertBtn.title = labels['snippet.button.insert'] || 'Insert into notebook';
   insertBtn.addEventListener('click', (e: Event) => {
     e.stopPropagation();
     onInsert(snippet);
   });
   actions.appendChild(insertBtn);
 
-  // Terminal copy button (bash only)
+  // Terminal button (bash only)
   if (snippet.code_lang === 'bash') {
     const termBtn = document.createElement('button');
     termBtn.className = 'jp-CodeLoader-snippet-actionBtn';
     termBtn.textContent = '>_';
-    termBtn.title = 'Copy for terminal (single-line)';
+    termBtn.title = labels['snippet.button.terminal'] || 'Send to terminal';
     termBtn.addEventListener('click', (e: Event) => {
       e.stopPropagation();
       onTerminalCopy(snippet);
@@ -52,7 +55,7 @@ export function createSnippetRow(
   const copyBtn = document.createElement('button');
   copyBtn.className = 'jp-CodeLoader-snippet-actionBtn';
   copyBtn.textContent = '\uD83D\uDCCB';
-  copyBtn.title = 'Copy to clipboard';
+  copyBtn.title = labels['snippet.button.copy'] || 'Copy to clipboard';
   copyBtn.addEventListener('click', (e: Event) => {
     e.stopPropagation();
     onCopy(snippet);

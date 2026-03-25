@@ -14,6 +14,7 @@ export function createStatusBar(
     shown: string;
     hidden: string;
     noFilter: string;
+    justNow?: string;
   }
 ): HTMLElement {
   const container = document.createElement('div');
@@ -24,7 +25,7 @@ export function createStatusBar(
   syncLine.className = 'jp-CodeLoader-status-sync';
 
   if (lastSync) {
-    const elapsed = _timeAgo(lastSync);
+    const elapsed = _timeAgo(lastSync, labels.justNow);
     syncLine.textContent = labels.lastSync.replace('{time}', elapsed);
   }
 
@@ -93,14 +94,14 @@ export function updateStatusBar(
   }
 }
 
-function _timeAgo(isoString: string): string {
+function _timeAgo(isoString: string, justNowLabel?: string): string {
   const now = new Date();
   const then = new Date(isoString);
   const diffMs = now.getTime() - then.getTime();
   const diffMin = Math.floor(diffMs / 60000);
 
   if (diffMin < 1) {
-    return 'just now';
+    return justNowLabel || 'just now';
   }
   if (diffMin < 60) {
     return `${diffMin}m`;

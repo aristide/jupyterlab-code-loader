@@ -4,11 +4,14 @@
 
 import { ICodeItem } from '../model';
 
+type Labels = Record<string, string>;
+
 export function createCodeItemRow(
   item: ICodeItem,
   domainId: string,
   onOpen: (domain: string, file: string) => void,
-  difficultyLabels: Record<string, string>
+  difficultyLabels: Record<string, string>,
+  labels: Labels
 ): HTMLElement {
   const row = document.createElement('div');
   row.className = 'jp-CodeLoader-codeItem';
@@ -23,19 +26,19 @@ export function createCodeItemRow(
   icon.className = 'jp-CodeLoader-codeItem-icon';
   if (item.file.endsWith('.ipynb')) {
     icon.textContent = '\uD83D\uDCD3';
-    icon.title = 'Notebook';
+    icon.title = labels['code.tooltip.notebook'] || 'Notebook';
   } else if (item.file.endsWith('.py')) {
     icon.textContent = '\uD83D\uDC0D';
-    icon.title = 'Python script';
+    icon.title = labels['code.tooltip.python'] || 'Python script';
   } else if (item.file.endsWith('.R') || item.file.endsWith('.Rmd')) {
     icon.textContent = '\uD83D\uDCCA';
-    icon.title = 'R script';
+    icon.title = labels['code.tooltip.r'] || 'R script';
   } else if (item.file.endsWith('.sh')) {
     icon.textContent = '\uD83D\uDCBB';
-    icon.title = 'Bash script';
+    icon.title = labels['code.tooltip.bash'] || 'Bash script';
   } else {
     icon.textContent = '\uD83D\uDCC4';
-    icon.title = 'Script';
+    icon.title = labels['code.tooltip.script'] || 'Script';
   }
 
   const titleText = document.createElement('span');
@@ -46,7 +49,7 @@ export function createCodeItemRow(
   const openBtn = document.createElement('button');
   openBtn.className = 'jp-CodeLoader-codeItem-openBtn';
   openBtn.textContent = '\u2B9E';
-  openBtn.title = 'Copy to workspace and open';
+  openBtn.title = labels['code.button.open'] || 'Copy to workspace and open';
   openBtn.addEventListener('click', (e: Event) => {
     e.stopPropagation();
     onOpen(domainId, item.file);
@@ -61,7 +64,7 @@ export function createCodeItemRow(
     translated.className =
       'jp-CodeLoader-badge jp-CodeLoader-badge--translated';
     translated.textContent = '\u2713';
-    translated.title = 'Translated';
+    translated.title = labels['code.badge.translated'] || 'Translated';
     titleLine.appendChild(translated);
   }
 
@@ -71,7 +74,10 @@ export function createCodeItemRow(
   const metaLine = document.createElement('div');
   metaLine.className = 'jp-CodeLoader-codeItem-meta';
 
-  const typeBadge = item.type === 'notebook' ? 'notebook' : 'script';
+  const typeBadge =
+    item.type === 'notebook'
+      ? labels['code.type.notebook'] || 'notebook'
+      : labels['code.type.script'] || 'script';
   const parts: string[] = [typeBadge];
 
   if (item.code_lang) {

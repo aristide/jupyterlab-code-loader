@@ -6,7 +6,26 @@
 
 import { requestAPI } from '../handler';
 
-export function createSetupForm(onConfigSaved: () => void): HTMLElement {
+type Labels = Record<string, string>;
+
+function _l(
+  labels: Labels,
+  key: string,
+  vars?: Record<string, string>
+): string {
+  let text = labels[key] || key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      text = text.replace(`{${k}}`, v);
+    }
+  }
+  return text;
+}
+
+export function createSetupForm(
+  onConfigSaved: () => void,
+  labels: Labels
+): HTMLElement {
   const container = document.createElement('div');
   container.className = 'jp-CodeLoader-setupForm';
 
@@ -28,12 +47,11 @@ export function createSetupForm(onConfigSaved: () => void): HTMLElement {
 
   const heroTitle = document.createElement('h3');
   heroTitle.className = 'jp-CodeLoader-setup-heroTitle';
-  heroTitle.textContent = 'Connect a repository';
+  heroTitle.textContent = _l(labels, 'setup.title');
 
   const heroDesc = document.createElement('p');
   heroDesc.className = 'jp-CodeLoader-setup-heroDesc';
-  heroDesc.textContent =
-    'Link a Git repository to browse code examples and reusable snippets.';
+  heroDesc.textContent = _l(labels, 'setup.desc');
 
   hero.appendChild(iconWrap);
   hero.appendChild(heroTitle);
@@ -44,24 +62,26 @@ export function createSetupForm(onConfigSaved: () => void): HTMLElement {
   card.className = 'jp-CodeLoader-setup-card';
 
   // Section: Repository
-  const repoSection = _createSection('Repository');
+  const repoSection = _createSection(_l(labels, 'setup.section.repo'));
 
   const urlGroup = _createField(
-    'URL',
+    _l(labels, 'setup.field.url'),
     'text',
-    'https://github.com/org/examples.git',
+    _l(labels, 'setup.field.url.placeholder'),
     'repo_url',
     true,
-    'HTTPS or SSH clone URL'
+    _l(labels, 'setup.field.url.hint'),
+    _l(labels, 'setup.field.required')
   );
 
   const branchGroup = _createField(
-    'Branch',
+    _l(labels, 'setup.field.branch'),
     'text',
     'main',
     'branch',
     false,
-    'Target branch to track'
+    _l(labels, 'setup.field.branch.hint'),
+    _l(labels, 'setup.field.required')
   );
   const branchInput = branchGroup.querySelector('input') as HTMLInputElement;
   branchInput.value = 'main';
@@ -70,19 +90,20 @@ export function createSetupForm(onConfigSaved: () => void): HTMLElement {
   repoSection.appendChild(branchGroup);
 
   // Section: Authentication
-  const authSection = _createSection('Authentication');
+  const authSection = _createSection(_l(labels, 'setup.section.auth'));
   const authHint = document.createElement('p');
   authHint.className = 'jp-CodeLoader-setup-sectionHint';
-  authHint.textContent = 'Only required for private repositories.';
+  authHint.textContent = _l(labels, 'setup.section.auth.hint');
   authSection.appendChild(authHint);
 
   const tokenGroup = _createField(
-    'Access token',
+    _l(labels, 'setup.field.token'),
     'password',
-    'ghp_\u2026 or glpat-\u2026',
+    _l(labels, 'setup.field.token.placeholder'),
     'git_token',
     false,
-    'GitHub PAT or GitLab token'
+    _l(labels, 'setup.field.token.hint'),
+    _l(labels, 'setup.field.required')
   );
   authSection.appendChild(tokenGroup);
 
@@ -127,7 +148,7 @@ export function createSetupForm(onConfigSaved: () => void): HTMLElement {
   connectBtn.type = 'button';
 
   const btnLabel = document.createElement('span');
-  btnLabel.textContent = 'Connect repository';
+  btnLabel.textContent = _l(labels, 'setup.button.connect');
   connectBtn.appendChild(btnLabel);
 
   btnWrap.appendChild(connectBtn);
@@ -140,7 +161,7 @@ export function createSetupForm(onConfigSaved: () => void): HTMLElement {
     const repoUrl = urlInput?.value?.trim();
 
     if (!repoUrl) {
-      _showError(errorMsg, errorText, 'Repository URL is required.');
+      _showError(errorMsg, errorText, _l(labels, 'setup.error.urlRequired'));
       urlInput?.focus();
       urlInput?.parentElement?.classList.add(
         'jp-CodeLoader-setup-group--invalid'
@@ -152,7 +173,7 @@ export function createSetupForm(onConfigSaved: () => void): HTMLElement {
       'jp-CodeLoader-setup-group--invalid'
     );
     _hideError(errorMsg);
-    _showStatus(statusMsg, statusText, 'Cloning repository\u2026');
+    _showStatus(statusMsg, statusText, _l(labels, 'setup.status.cloning'));
     connectBtn.disabled = true;
     connectBtn.classList.add('jp-CodeLoader-setup-connectBtn--loading');
 
@@ -174,14 +195,16 @@ export function createSetupForm(onConfigSaved: () => void): HTMLElement {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
       });
-      _showStatus(
-        statusMsg,
-        statusText,
-        'Connected \u2014 loading content\u2026'
-      );
+      _showStatus(statusMsg, statusText, _l(labels, 'setup.status.connected'));
       onConfigSaved();
     } catch (e: any) {
-      _showError(errorMsg, errorText, `Connection failed: ${e.message || e}`);
+      _showError(
+        errorMsg,
+        errorText,
+        _l(labels, 'setup.error.connectionFailed', {
+          error: e.message || String(e)
+        })
+      );
       _hideStatus(statusMsg);
       connectBtn.disabled = false;
       connectBtn.classList.remove('jp-CodeLoader-setup-connectBtn--loading');
@@ -217,7 +240,8 @@ function _createField(
   placeholder: string,
   fieldName: string,
   required: boolean,
-  hint?: string
+  hint?: string,
+  requiredLabel?: string
 ): HTMLElement {
   const group = document.createElement('div');
   group.className = 'jp-CodeLoader-setup-group';
@@ -232,7 +256,7 @@ function _createField(
   if (required) {
     const badge = document.createElement('span');
     badge.className = 'jp-CodeLoader-setup-requiredBadge';
-    badge.textContent = 'required';
+    badge.textContent = requiredLabel || 'required';
     labelRow.appendChild(labelEl);
     labelRow.appendChild(badge);
   } else {
@@ -250,7 +274,6 @@ function _createField(
     input.required = true;
   }
 
-  // Clear invalid state on input
   input.addEventListener('input', () => {
     group.classList.remove('jp-CodeLoader-setup-group--invalid');
   });

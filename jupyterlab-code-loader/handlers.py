@@ -248,9 +248,18 @@ class UILabelsHandler(APIHandler):
         config: Config = self.settings["code_loader_config"]
         locale = _get_locale(self)
 
+        # Try cache first (repo-provided translations)
         path = config.cache_dir / "i18n" / f"{locale}.json"
         if not path.exists():
             path = config.cache_dir / "i18n" / "en.json"
+
+        # Fall back to bundled translations shipped with the extension
+        if not path.exists():
+            bundled = Path(__file__).parent / "i18n" / f"{locale}.json"
+            if not bundled.exists():
+                bundled = Path(__file__).parent / "i18n" / "en.json"
+            path = bundled
+
         if path.exists():
             self.finish(path.read_text())
         else:

@@ -45,27 +45,77 @@ import { createStatusBar } from './components/StatusBar';
 import { createSetupForm } from './components/SetupForm';
 
 const DEFAULT_LABELS: Record<string, string> = {
+  // Sidebar
   'sidebar.title': 'Code & snippets',
+  'sidebar.caption': 'Code & Snippets',
+  // Tabs
   'tab.code': 'Code examples',
   'tab.snippets': 'Snippets',
+  // Search
   'search.code.placeholder': 'Search code examples...',
   'search.snippets.placeholder': 'Search snippets...',
+  // Status bar
   'status.lastSync': 'Last synced {time} ago',
   'status.refresh': 'Refresh',
-  'action.copyToWorkspace': 'Copy to workspace',
-  'action.openInEditor': 'Open in editor',
-  'action.insertSnippet': 'Insert snippet',
-  'action.copyToClipboard': 'Copy to clipboard',
+  'status.justNow': 'just now',
+  // Difficulty
   'difficulty.beginner': 'beginner',
   'difficulty.intermediate': 'intermediate',
   'difficulty.advanced': 'advanced',
+  // Locale
   'locale.fallbackNotice': 'Translation unavailable \u2014 English version',
   'locale.translated': 'Translated',
+  // Kernel
   'kernel.detected': 'Kernel {name} detected',
   'kernel.none': 'No notebook active',
+  // Filters
   'filter.shown': '{n} shown',
   'filter.hidden': '{n} hidden ({lang})',
-  'filter.noFilter': 'no filter'
+  'filter.noFilter': 'no filter',
+  // Code item row
+  'code.tooltip.notebook': 'Notebook',
+  'code.tooltip.python': 'Python script',
+  'code.tooltip.r': 'R script',
+  'code.tooltip.bash': 'Bash script',
+  'code.tooltip.script': 'Script',
+  'code.button.open': 'Copy to workspace and open',
+  'code.badge.translated': 'Translated',
+  'code.type.notebook': 'notebook',
+  'code.type.script': 'script',
+  // Snippet row
+  'snippet.button.insert': 'Insert into notebook',
+  'snippet.button.terminal': 'Send to terminal',
+  'snippet.button.copy': 'Copy to clipboard',
+  // Setup form
+  'setup.title': 'Connect a repository',
+  'setup.desc':
+    'Link a Git repository to browse code examples and reusable snippets.',
+  'setup.section.repo': 'Repository',
+  'setup.field.url': 'URL',
+  'setup.field.url.placeholder': 'https://github.com/org/examples.git',
+  'setup.field.url.hint': 'HTTPS or SSH clone URL',
+  'setup.field.branch': 'Branch',
+  'setup.field.branch.hint': 'Target branch to track',
+  'setup.section.auth': 'Authentication',
+  'setup.section.auth.hint': 'Only required for private repositories.',
+  'setup.field.token': 'Access token',
+  'setup.field.token.placeholder': 'ghp_\u2026 or glpat-\u2026',
+  'setup.field.token.hint': 'GitHub PAT or GitLab token',
+  'setup.field.required': 'required',
+  'setup.button.connect': 'Connect repository',
+  'setup.error.urlRequired': 'Repository URL is required.',
+  'setup.status.cloning': 'Cloning repository\u2026',
+  'setup.status.connected': 'Connected \u2014 loading content\u2026',
+  'setup.error.connectionFailed': 'Connection failed: {error}',
+  // Reset
+  'reset.confirm':
+    'Reset configuration? This will clear all settings and return to the setup form.',
+  'reset.title': 'Reset configuration',
+  // Errors
+  'error.loadFailed':
+    'Failed to load content. Check the repository configuration.',
+  // Hidden items
+  'hidden.notice': '{n} hidden'
 };
 
 export class CodeLoaderWidget extends Widget {
@@ -113,6 +163,9 @@ export class CodeLoaderWidget extends Widget {
   }
 
   private async _initialize(): Promise<void> {
+    // Load UI labels first so all UI (including setup form) is translated
+    await this._loadUILabels();
+
     // Check if extension is configured
     try {
       const config = await requestAPI<IConfig>('config');
@@ -126,8 +179,6 @@ export class CodeLoaderWidget extends Widget {
       return;
     }
 
-    // Load UI labels, then build UI and load data
-    await this._loadUILabels();
     this._buildUI();
     await this._loadRegistry();
   }
@@ -160,7 +211,7 @@ export class CodeLoaderWidget extends Widget {
     const form = createSetupForm(() => {
       this.node.innerHTML = '';
       this._initialize();
-    });
+    }, this.uiLabels);
     this.node.appendChild(form);
   }
 
@@ -182,7 +233,7 @@ export class CodeLoaderWidget extends Widget {
     if (this.allowReset) {
       const resetBtn = document.createElement('button');
       resetBtn.className = 'jp-CodeLoader-resetBtn';
-      resetBtn.title = 'Reset configuration';
+      resetBtn.title = this._t('reset.title');
       resetBtn.innerHTML =
         '<svg viewBox="0 0 16 16" width="14" height="14">' +
         '<path fill="currentColor" d="M2 2.5A2.5 2.5 0 0 1 4.5 0h5.75a.75.75 0 0 1' +
@@ -318,8 +369,11 @@ export class CodeLoaderWidget extends Widget {
       this._renderStatusBar();
     } catch (e) {
       if (this.contentEl) {
-        this.contentEl.innerHTML =
-          '<div class="jp-CodeLoader-error">Failed to load content. Check the repository configuration.</div>';
+        const errDiv = document.createElement('div');
+        errDiv.className = 'jp-CodeLoader-error';
+        errDiv.textContent = this._t('error.loadFailed');
+        this.contentEl.innerHTML = '';
+        this.contentEl.appendChild(errDiv);
       }
     }
   }
@@ -374,7 +428,8 @@ export class CodeLoaderWidget extends Widget {
           item,
           domain.id,
           (d, f) => this._openCodeExample(d, f),
-          difficultyLabels
+          difficultyLabels,
+          this.uiLabels
         );
         content.appendChild(row);
       }
@@ -382,7 +437,7 @@ export class CodeLoaderWidget extends Widget {
       if (hidden > 0) {
         const notice = document.createElement('div');
         notice.className = 'jp-CodeLoader-hiddenNotice';
-        notice.textContent = `${hidden} hidden`;
+        notice.textContent = this._t('hidden.notice', { n: String(hidden) });
         content.appendChild(notice);
       }
 
@@ -429,7 +484,8 @@ export class CodeLoaderWidget extends Widget {
             snippet,
             s => this._insertSnippet(s),
             s => this._copyToClipboard(s),
-            s => this._copyForTerminal(s)
+            s => this._copyForTerminal(s),
+            this.uiLabels
           );
           content.appendChild(row);
         }
@@ -480,7 +536,8 @@ export class CodeLoaderWidget extends Widget {
         refresh: this._t('status.refresh'),
         shown: this._t('filter.shown'),
         hidden: this._t('filter.hidden'),
-        noFilter: this._t('filter.noFilter')
+        noFilter: this._t('filter.noFilter'),
+        justNow: this._t('status.justNow')
       }
     );
 
@@ -674,9 +731,7 @@ export class CodeLoaderWidget extends Widget {
   }
 
   private async _handleReset(): Promise<void> {
-    const confirmed = window.confirm(
-      'Reset configuration? This will clear all settings and return to the setup form.'
-    );
+    const confirmed = window.confirm(this._t('reset.confirm'));
     if (!confirmed) {
       return;
     }

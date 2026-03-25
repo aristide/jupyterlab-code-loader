@@ -4,6 +4,8 @@
 
 ### Added
 
+- Full French (fr) internationalization of all UI strings — setup form, tooltips, badges, status bar, error messages.
+- Bundled i18n JSON files (en.json, fr.json) shipped with the extension as fallback when the content repository doesn't provide translations.
 - "Open" button on code example rows to copy the file to the workspace and open it.
 - Smart snippet insertion: inserts into compatible open notebook or creates a new notebook with the correct kernel. Empty active cells are populated in-place.
 - Bash snippets get a "Copy for terminal" button that formats commands as a single pasteable line with `&&` joins.
