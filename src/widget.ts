@@ -607,15 +607,41 @@ export class CodeLoaderWidget extends Widget {
     this._toClipboard(code);
   }
 
-  private _copyForTerminal(snippet: ISnippet): void {
+  private async _copyForTerminal(snippet: ISnippet): Promise<void> {
     const lines: string[] = [];
     if (snippet.imports && snippet.imports.length > 0) {
       lines.push(...snippet.imports);
     }
     lines.push(...snippet.code.split('\n').filter((l: string) => l.trim()));
 
-    const terminal = lines.length > 1 ? lines.join(' && ') : lines[0] || '';
-    this._toClipboard(terminal);
+    const command = lines.length > 1 ? lines.join(' && ') : lines[0] || '';
+
+    try {
+      // Open or reuse a terminal
+      const terminals = this.app.serviceManager.terminals;
+      await terminals.ready;
+
+      let termModel: any;
+      const running = Array.from(terminals.running());
+      if (running.length > 0) {
+        termModel = running[0];
+      } else {
+        termModel = await terminals.startNew();
+      }
+
+      // Ensure the terminal widget is open and focused
+      await this.app.commands.execute('terminal:open', {
+        name: termModel.name
+      });
+
+      // Connect and send the command text (without \r so user can review)
+      const connection = terminals.connectTo({ model: termModel });
+      connection.send({ type: 'stdin', content: [command] });
+    } catch (e) {
+      console.error('[CodeLoader] Failed to send to terminal:', e);
+      // Fallback: copy to clipboard
+      this._toClipboard(command);
+    }
   }
 
   private _toClipboard(text: string): void {
