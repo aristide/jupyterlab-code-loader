@@ -1,5 +1,9 @@
 # jupyterlab-code-loader
 
+[![Github Actions Status](https://github.com/aristide/jupyterlab-code-loader/workflows/Build/badge.svg)](https://github.com/aristide/jupyterlab-code-loader/actions/workflows/build.yml)
+[![PyPI version](https://badge.fury.io/py/jupyterlab-code-loader.svg)](https://badge.fury.io/py/jupyterlab-code-loader)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyterlab-minio/jupyterlab-code-loader/master?urlpath=lab)
+
 Jupyterlab-code-loader is a self-contained JupyterLab extension that provides a left sidebar panel for browsing, searching, and using code examples (notebooks, Python scripts, R scripts) and reusable code snippets. All content is sourced from a single open Git repository and organized by domain.
 
 ![Jupyter code loader form](https://raw.githubusercontent.com/aristide/jupyterlab-code-loader/master/screenshot1.png)
