@@ -29,8 +29,12 @@ const plugin: JupyterFrontEndPlugin<void> = {
     notebookTracker: INotebookTracker | null,
     translator: ITranslator | null
   ) => {
-    // Detect JupyterLab language code
-    const jlLocale = (translator && (translator as any).languageCode) || 'en';
+    // Detect JupyterLab language code and normalize BCP47 (fr-FR → fr)
+    const rawLocale = translator?.languageCode || 'en';
+    const jlLocale = rawLocale.split('-')[0].toLowerCase();
+    console.log(
+      `[CodeLoader] JupyterLab locale: raw=${rawLocale}, normalized=${jlLocale}`
+    );
 
     // Fetch supported locales from backend and validate
     let locale = 'en';
@@ -38,6 +42,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
       const config = await requestAPI<IConfig>('config');
       const supported = config.supported_locales || ['en', 'fr'];
       locale = supported.includes(jlLocale) ? jlLocale : 'en';
+      console.log(
+        `[CodeLoader] Supported: ${supported.join(',')}, using: ${locale}`
+      );
     } catch {
       // Fallback to en if config fetch fails
     }
@@ -47,7 +54,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     const widget = new CodeLoaderWidget(app, notebookTracker, locale);
     widget.id = 'jupyterlab-code-loader-sidebar';
     widget.title.icon = codeLoaderIcon;
-    widget.title.caption = 'Examples & Snippets';
+    widget.title.caption = 'Code & Snippets';
 
     // ---- Kernel detection ----
     if (notebookTracker) {
