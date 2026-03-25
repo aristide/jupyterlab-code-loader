@@ -7,6 +7,7 @@
 
 import { Widget } from '@lumino/widgets';
 import { JupyterFrontEnd } from '@jupyterlab/application';
+import { Clipboard } from '@jupyterlab/apputils';
 import { INotebookTracker } from '@jupyterlab/notebook';
 import { requestAPI } from './handler';
 import { kernelToCodeLang, codeLangToKernel } from './kernel_map';
@@ -597,16 +598,16 @@ export class CodeLoaderWidget extends Widget {
     }
   }
 
-  private async _copyToClipboard(snippet: ISnippet): Promise<void> {
+  private _copyToClipboard(snippet: ISnippet): void {
     const code =
       snippet.imports.length > 0
         ? snippet.imports.join('\n') + '\n\n' + snippet.code
         : snippet.code;
 
-    this._writeToClipboard(code);
+    Clipboard.copyToSystem(code);
   }
 
-  private async _copyForTerminal(snippet: ISnippet): Promise<void> {
+  private _copyForTerminal(snippet: ISnippet): void {
     const lines: string[] = [];
     if (snippet.imports.length > 0) {
       lines.push(...snippet.imports);
@@ -614,33 +615,7 @@ export class CodeLoaderWidget extends Widget {
     lines.push(...snippet.code.split('\n').filter((l: string) => l.trim()));
 
     const terminal = lines.length > 1 ? lines.join(' && ') : lines[0] || '';
-    this._writeToClipboard(terminal);
-  }
-
-  private _writeToClipboard(text: string): void {
-    // Try modern clipboard API first, fall back to execCommand
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).catch(() => {
-        this._fallbackCopy(text);
-      });
-    } else {
-      this._fallbackCopy(text);
-    }
-  }
-
-  private _fallbackCopy(text: string): void {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-      document.execCommand('copy');
-    } catch {
-      console.warn('Copy to clipboard failed');
-    }
-    document.body.removeChild(textarea);
+    Clipboard.copyToSystem(terminal);
   }
 
   private async _refreshCache(): Promise<void> {
