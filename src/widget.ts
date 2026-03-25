@@ -603,11 +603,7 @@ export class CodeLoaderWidget extends Widget {
         ? snippet.imports.join('\n') + '\n\n' + snippet.code
         : snippet.code;
 
-    try {
-      await navigator.clipboard.writeText(code);
-    } catch {
-      console.warn('Clipboard API not available');
-    }
+    this._writeToClipboard(code);
   }
 
   private async _copyForTerminal(snippet: ISnippet): Promise<void> {
@@ -617,14 +613,34 @@ export class CodeLoaderWidget extends Widget {
     }
     lines.push(...snippet.code.split('\n').filter((l: string) => l.trim()));
 
-    // Join as a single pasteable command with && separators
     const terminal = lines.length > 1 ? lines.join(' && ') : lines[0] || '';
+    this._writeToClipboard(terminal);
+  }
 
-    try {
-      await navigator.clipboard.writeText(terminal);
-    } catch {
-      console.warn('Clipboard API not available');
+  private _writeToClipboard(text: string): void {
+    // Try modern clipboard API first, fall back to execCommand
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).catch(() => {
+        this._fallbackCopy(text);
+      });
+    } else {
+      this._fallbackCopy(text);
     }
+  }
+
+  private _fallbackCopy(text: string): void {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+    } catch {
+      console.warn('Copy to clipboard failed');
+    }
+    document.body.removeChild(textarea);
   }
 
   private async _refreshCache(): Promise<void> {
