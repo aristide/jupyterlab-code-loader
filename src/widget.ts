@@ -600,22 +600,39 @@ export class CodeLoaderWidget extends Widget {
 
   private _copyToClipboard(snippet: ISnippet): void {
     const code =
-      snippet.imports.length > 0
+      snippet.imports && snippet.imports.length > 0
         ? snippet.imports.join('\n') + '\n\n' + snippet.code
         : snippet.code;
 
-    Clipboard.copyToSystem(code);
+    this._toClipboard(code);
   }
 
   private _copyForTerminal(snippet: ISnippet): void {
     const lines: string[] = [];
-    if (snippet.imports.length > 0) {
+    if (snippet.imports && snippet.imports.length > 0) {
       lines.push(...snippet.imports);
     }
     lines.push(...snippet.code.split('\n').filter((l: string) => l.trim()));
 
     const terminal = lines.length > 1 ? lines.join(' && ') : lines[0] || '';
-    Clipboard.copyToSystem(terminal);
+    this._toClipboard(terminal);
+  }
+
+  private _toClipboard(text: string): void {
+    // navigator.clipboard works on localhost (secure context)
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(
+        () => {
+          console.log('[CodeLoader] Copied to clipboard');
+        },
+        () => {
+          // Fallback: JupyterLab synthetic copy event
+          Clipboard.copyToSystem(text);
+        }
+      );
+    } else {
+      Clipboard.copyToSystem(text);
+    }
   }
 
   private async _refreshCache(): Promise<void> {
