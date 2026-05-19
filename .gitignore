@@ -228,3 +228,5 @@ ui-tests/.yarn/
 notebooks/*
 !notebooks/.keep
 .Trash*
+.memsearch/*
+scope/*

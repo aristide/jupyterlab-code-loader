@@ -15,6 +15,7 @@
       "name": "jlab backend",
       "type": "python",
       "request": "launch",
+      "python": "/home/jupyter/.pyenv/versions/3.12.7/bin/python",
       "args": [
         "--notebook-dir=notebooks",
         "--no-browser",
