@@ -1,5 +1,5 @@
 /**
- * Kernel indicator pill component: Python (blue), R (green), All (gray).
+ * Subheader chip + status row — shows the active kernel filter and notebook.
  */
 
 import { codeLangLabel, codeLangClass } from '../kernel_map';
@@ -9,50 +9,66 @@ export function createKernelIndicator(
   kernelName: string | null,
   labels: { detected: string; none: string }
 ): HTMLElement {
-  const container = document.createElement('div');
-  container.className = 'jp-CodeLoader-kernelStatus';
+  const wrap = document.createElement('div');
+  wrap.className = 'jp-CodeLoader-subheaderFilter';
 
-  // Pill badge
-  const pill = document.createElement('span');
-  pill.className = `jp-CodeLoader-kernelPill jp-CodeLoader-kernelPill--${codeLangClass(codeLang)}`;
-  pill.textContent = codeLangLabel(codeLang);
+  const chip = document.createElement('span');
+  chip.className = `jp-CodeLoader-chip jp-CodeLoader-chip--${codeLangClass(codeLang)}`;
+  chip.textContent = codeLangLabel(codeLang);
+  if (!codeLang) {
+    chip.classList.add('jp-CodeLoader-chip--active');
+  }
+  wrap.appendChild(chip);
 
-  // Status text
-  const statusText = document.createElement('span');
-  statusText.className = 'jp-CodeLoader-kernelText';
+  const status = document.createElement('span');
+  status.className = 'jp-CodeLoader-subheaderStatus';
   if (kernelName) {
-    statusText.textContent = labels.detected.replace('{name}', kernelName);
-  } else {
-    statusText.textContent = labels.none;
+    status.classList.add('jp-CodeLoader-subheaderStatus--live');
   }
 
-  container.appendChild(pill);
-  container.appendChild(statusText);
+  const dot = document.createElement('span');
+  dot.className = 'jp-CodeLoader-statusDot';
+  status.appendChild(dot);
 
-  return container;
+  const text = document.createElement('span');
+  if (kernelName) {
+    text.textContent = labels.detected.replace('{name}', kernelName);
+  } else {
+    text.textContent = labels.none;
+  }
+  status.appendChild(text);
+
+  wrap.appendChild(status);
+  return wrap;
 }
 
-/**
- * Update an existing kernel indicator in-place.
- */
 export function updateKernelIndicator(
   container: HTMLElement,
   codeLang: string | null,
   kernelName: string | null,
   labels: { detected: string; none: string }
 ): void {
-  const pill = container.querySelector('.jp-CodeLoader-kernelPill');
-  if (pill) {
-    pill.className = `jp-CodeLoader-kernelPill jp-CodeLoader-kernelPill--${codeLangClass(codeLang)}`;
-    pill.textContent = codeLangLabel(codeLang);
+  const chip = container.querySelector('.jp-CodeLoader-chip') as HTMLElement;
+  if (chip) {
+    chip.className = `jp-CodeLoader-chip jp-CodeLoader-chip--${codeLangClass(codeLang)}`;
+    chip.textContent = codeLangLabel(codeLang);
+    if (!codeLang) {
+      chip.classList.add('jp-CodeLoader-chip--active');
+    }
   }
-
-  const text = container.querySelector('.jp-CodeLoader-kernelText');
-  if (text) {
-    if (kernelName) {
-      text.textContent = labels.detected.replace('{name}', kernelName);
-    } else {
-      text.textContent = labels.none;
+  const status = container.querySelector(
+    '.jp-CodeLoader-subheaderStatus'
+  ) as HTMLElement;
+  if (status) {
+    status.classList.toggle(
+      'jp-CodeLoader-subheaderStatus--live',
+      !!kernelName
+    );
+    const text = status.querySelector('span:nth-child(2)');
+    if (text) {
+      text.textContent = kernelName
+        ? labels.detected.replace('{name}', kernelName)
+        : labels.none;
     }
   }
 }

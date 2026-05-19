@@ -1,6 +1,9 @@
 /**
- * Collapsible domain accordion component.
+ * Collapsible list group for a domain.
+ * Replaces the native <details> element to match the Data4Now caret style.
  */
+
+import { Svg } from '../svg_icons';
 
 export function createDomainAccordion(
   domainName: string,
@@ -8,67 +11,62 @@ export function createDomainAccordion(
   hiddenCount: number,
   expanded: boolean
 ): HTMLElement {
-  const details = document.createElement('details');
-  details.className = 'jp-CodeLoader-accordion';
-  if (expanded) {
-    details.open = true;
-  }
-  if (itemCount === 0) {
-    details.classList.add('jp-CodeLoader-accordion--empty');
-  }
+  const group = document.createElement('div');
+  group.className =
+    'jp-CodeLoader-lgrp' + (expanded ? '' : ' jp-CodeLoader-lgrp--collapsed');
 
-  const summary = document.createElement('summary');
-  summary.className = 'jp-CodeLoader-accordionHeader';
+  const head = document.createElement('div');
+  head.className = 'jp-CodeLoader-lgrpHead';
+  head.setAttribute('role', 'button');
+  head.setAttribute('aria-expanded', String(expanded));
 
-  const titleSpan = document.createElement('span');
-  titleSpan.className = 'jp-CodeLoader-accordionTitle';
-  titleSpan.textContent = domainName;
+  const caret = document.createElement('span');
+  caret.className = 'jp-CodeLoader-lgrpCaret';
+  caret.innerHTML = Svg.caret;
+  head.appendChild(caret);
 
-  const countBadge = document.createElement('span');
-  countBadge.className = 'jp-CodeLoader-accordionCount';
-  countBadge.textContent = String(itemCount);
+  const title = document.createElement('span');
+  title.className = 'jp-CodeLoader-lgrpTitle';
+  title.textContent = domainName;
+  head.appendChild(title);
 
-  summary.appendChild(titleSpan);
-  summary.appendChild(countBadge);
+  const count = document.createElement('span');
+  count.className = 'jp-CodeLoader-lgrpCount';
+  count.textContent = String(itemCount);
+  head.appendChild(count);
 
-  const content = document.createElement('div');
-  content.className = 'jp-CodeLoader-accordionContent';
+  const items = document.createElement('div');
+  items.className = 'jp-CodeLoader-lgrpItems';
 
-  // Hidden items notice
+  head.addEventListener('click', () => {
+    const collapsed = group.classList.toggle('jp-CodeLoader-lgrp--collapsed');
+    head.setAttribute('aria-expanded', String(!collapsed));
+  });
+
+  group.appendChild(head);
+  group.appendChild(items);
+
   if (hiddenCount > 0) {
-    const hidden = document.createElement('div');
-    hidden.className = 'jp-CodeLoader-hiddenNotice';
-    hidden.textContent = `${hiddenCount} hidden`;
-    content.appendChild(hidden);
+    const notice = document.createElement('div');
+    notice.className = 'jp-CodeLoader-hiddenNotice';
+    notice.textContent = `${hiddenCount} hidden`;
+    items.appendChild(notice);
   }
 
-  details.appendChild(summary);
-  details.appendChild(content);
-
-  return details;
+  return group;
 }
 
-/**
- * Get the content container of an accordion for appending items.
- */
 export function getAccordionContent(accordion: HTMLElement): HTMLElement {
-  return accordion.querySelector(
-    '.jp-CodeLoader-accordionContent'
-  ) as HTMLElement;
+  return accordion.querySelector('.jp-CodeLoader-lgrpItems') as HTMLElement;
 }
 
-/**
- * Update the count badge on an accordion header.
- */
 export function updateAccordionCount(
   accordion: HTMLElement,
   count: number,
-  hiddenCount: number
+  _hiddenCount: number
 ): void {
-  const badge = accordion.querySelector('.jp-CodeLoader-accordionCount');
+  const badge = accordion.querySelector('.jp-CodeLoader-lgrpCount');
   if (badge) {
     badge.textContent = String(count);
   }
-
-  accordion.classList.toggle('jp-CodeLoader-accordion--empty', count === 0);
 }

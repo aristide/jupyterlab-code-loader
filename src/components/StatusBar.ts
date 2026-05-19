@@ -1,6 +1,9 @@
 /**
- * Status bar (footer) component with sync info and refresh button.
+ * Sync bar — sits at the bottom of the connected sidebar.
+ * Shows last-sync time, visible/hidden counts, and a refresh action.
  */
+
+import { Svg } from '../svg_icons';
 
 export function createStatusBar(
   lastSync: string | null,
@@ -17,50 +20,58 @@ export function createStatusBar(
     justNow?: string;
   }
 ): HTMLElement {
-  const container = document.createElement('div');
-  container.className = 'jp-CodeLoader-status';
+  const bar = document.createElement('footer');
+  bar.className = 'jp-CodeLoader-syncbar';
 
-  // Sync info
-  const syncLine = document.createElement('div');
-  syncLine.className = 'jp-CodeLoader-status-sync';
+  // Sync line
+  const sync = document.createElement('span');
+  sync.className = 'jp-CodeLoader-syncbarSync';
 
+  const dot = document.createElement('span');
+  dot.className = 'jp-CodeLoader-syncDot';
+  sync.appendChild(dot);
+
+  const syncText = document.createElement('span');
   if (lastSync) {
     const elapsed = _timeAgo(lastSync, labels.justNow);
-    syncLine.textContent = labels.lastSync.replace('{time}', elapsed);
+    const html = labels.lastSync.replace(
+      '{time}',
+      `<strong>${elapsed}</strong>`
+    );
+    syncText.innerHTML = html;
+  } else {
+    syncText.textContent = '';
   }
+  sync.appendChild(syncText);
+  bar.appendChild(sync);
 
-  // Filter counts
-  const countLine = document.createElement('div');
-  countLine.className = 'jp-CodeLoader-status-counts';
-
+  // Count line
+  const count = document.createElement('span');
+  count.className = 'jp-CodeLoader-syncbarCount';
   const shownText = labels.shown.replace('{n}', String(shownCount));
   if (hiddenCount > 0 && activeCodeLang) {
     const hiddenText = labels.hidden
       .replace('{n}', String(hiddenCount))
       .replace('{lang}', activeCodeLang);
-    countLine.textContent = `${shownText} \u00B7 ${hiddenText}`;
+    count.textContent = `${shownText} · ${hiddenText}`;
   } else {
-    countLine.textContent = `${shownText} \u00B7 ${labels.noFilter}`;
+    count.textContent = `${shownText} · ${labels.noFilter}`;
   }
+  bar.appendChild(count);
 
   // Refresh button
-  const refreshBtn = document.createElement('button');
-  refreshBtn.className = 'jp-CodeLoader-status-refreshBtn';
-  refreshBtn.textContent = labels.refresh;
-  refreshBtn.addEventListener('click', () => {
+  const refresh = document.createElement('button');
+  refresh.type = 'button';
+  refresh.className = 'jp-CodeLoader-syncbarRefresh';
+  refresh.innerHTML = `${Svg.refresh}<span>${labels.refresh}</span>`;
+  refresh.addEventListener('click', () => {
     onRefresh();
   });
+  bar.appendChild(refresh);
 
-  container.appendChild(syncLine);
-  container.appendChild(countLine);
-  container.appendChild(refreshBtn);
-
-  return container;
+  return bar;
 }
 
-/**
- * Update the status bar content in-place.
- */
 export function updateStatusBar(
   container: HTMLElement,
   lastSync: string | null,
@@ -74,22 +85,26 @@ export function updateStatusBar(
     noFilter: string;
   }
 ): void {
-  const syncLine = container.querySelector('.jp-CodeLoader-status-sync');
-  if (syncLine && lastSync) {
-    const elapsed = _timeAgo(lastSync);
-    syncLine.textContent = labels.lastSync.replace('{time}', elapsed);
+  const sync = container.querySelector(
+    '.jp-CodeLoader-syncbarSync > span:nth-child(2)'
+  );
+  if (sync && lastSync) {
+    const html = labels.lastSync.replace(
+      '{time}',
+      `<strong>${_timeAgo(lastSync)}</strong>`
+    );
+    sync.innerHTML = html;
   }
-
-  const countLine = container.querySelector('.jp-CodeLoader-status-counts');
-  if (countLine) {
+  const count = container.querySelector('.jp-CodeLoader-syncbarCount');
+  if (count) {
     const shownText = labels.shown.replace('{n}', String(shownCount));
     if (hiddenCount > 0 && activeCodeLang) {
       const hiddenText = labels.hidden
         .replace('{n}', String(hiddenCount))
         .replace('{lang}', activeCodeLang);
-      countLine.textContent = `${shownText} \u00B7 ${hiddenText}`;
+      count.textContent = `${shownText} · ${hiddenText}`;
     } else {
-      countLine.textContent = `${shownText} \u00B7 ${labels.noFilter}`;
+      count.textContent = `${shownText} · ${labels.noFilter}`;
     }
   }
 }
@@ -99,7 +114,6 @@ function _timeAgo(isoString: string, justNowLabel?: string): string {
   const then = new Date(isoString);
   const diffMs = now.getTime() - then.getTime();
   const diffMin = Math.floor(diffMs / 60000);
-
   if (diffMin < 1) {
     return justNowLabel || 'just now';
   }

@@ -1,98 +1,109 @@
 /**
- * Snippet row component for the Snippets tab.
+ * Snippet card — title + action buttons, code preview line, tag row.
  */
 
 import { ISnippet } from '../model';
+import { Svg } from '../svg_icons';
 
 type Labels = Record<string, string>;
 
 export function createSnippetRow(
   snippet: ISnippet,
-  onInsert: (snippet: ISnippet) => void,
-  onCopy: (snippet: ISnippet) => void,
-  onTerminalCopy: (snippet: ISnippet) => void,
+  onInsert: (s: ISnippet) => void,
+  onCopy: (s: ISnippet) => void,
+  onTerminal: (s: ISnippet) => void,
   labels: Labels
 ): HTMLElement {
-  const row = document.createElement('div');
-  row.className = 'jp-CodeLoader-snippet';
+  const card = document.createElement('div');
+  card.className = 'jp-CodeLoader-snip';
+  card.title = snippet.code;
 
-  // Title line with action buttons
-  const titleLine = document.createElement('div');
-  titleLine.className = 'jp-CodeLoader-snippet-header';
+  // Head
+  const head = document.createElement('div');
+  head.className = 'jp-CodeLoader-snipHead';
 
-  const titleText = document.createElement('span');
-  titleText.className = 'jp-CodeLoader-snippet-title';
-  titleText.textContent = snippet.title;
+  const title = document.createElement('span');
+  title.className = 'jp-CodeLoader-snipTitle';
+  title.textContent = snippet.title;
+  head.appendChild(title);
 
   const actions = document.createElement('div');
-  actions.className = 'jp-CodeLoader-snippet-actions';
+  actions.className = 'jp-CodeLoader-snipActions';
 
-  // Insert button
-  const insertBtn = document.createElement('button');
-  insertBtn.className = 'jp-CodeLoader-snippet-actionBtn';
-  insertBtn.textContent = '\u2B9E';
-  insertBtn.title = labels['snippet.button.insert'] || 'Insert into notebook';
-  insertBtn.addEventListener('click', (e: Event) => {
-    e.stopPropagation();
-    onInsert(snippet);
-  });
+  const insertBtn = _btn(
+    Svg.chevron,
+    labels['snippet.button.insert'] || 'Insert into notebook',
+    e => {
+      e.stopPropagation();
+      onInsert(snippet);
+    }
+  );
   actions.appendChild(insertBtn);
 
-  // Terminal button (bash only)
   if (snippet.code_lang === 'bash') {
-    const termBtn = document.createElement('button');
-    termBtn.className = 'jp-CodeLoader-snippet-actionBtn';
-    termBtn.textContent = '>_';
-    termBtn.title = labels['snippet.button.terminal'] || 'Send to terminal';
-    termBtn.addEventListener('click', (e: Event) => {
-      e.stopPropagation();
-      onTerminalCopy(snippet);
-    });
+    const termBtn = _btn(
+      Svg.terminal,
+      labels['snippet.button.terminal'] || 'Send to terminal',
+      e => {
+        e.stopPropagation();
+        onTerminal(snippet);
+      }
+    );
     actions.appendChild(termBtn);
   }
 
-  // Copy button
-  const copyBtn = document.createElement('button');
-  copyBtn.className = 'jp-CodeLoader-snippet-actionBtn';
-  copyBtn.textContent = '\uD83D\uDCCB';
-  copyBtn.title = labels['snippet.button.copy'] || 'Copy to clipboard';
-  copyBtn.addEventListener('click', (e: Event) => {
-    e.stopPropagation();
-    onCopy(snippet);
-  });
+  const copyBtn = _btn(
+    Svg.copy,
+    labels['snippet.button.copy'] || 'Copy to clipboard',
+    e => {
+      e.stopPropagation();
+      onCopy(snippet);
+    }
+  );
   actions.appendChild(copyBtn);
 
-  titleLine.appendChild(titleText);
-  titleLine.appendChild(actions);
+  head.appendChild(actions);
+  card.appendChild(head);
 
   // Code preview
-  const preview = document.createElement('div');
-  preview.className = 'jp-CodeLoader-snippet-preview';
-  const codeLine = snippet.code.split('\n')[0];
-  preview.textContent =
-    codeLine.length > 50 ? codeLine.substring(0, 50) + '\u2026' : codeLine;
+  const code = document.createElement('div');
+  code.className = 'jp-CodeLoader-snipCode';
+  const firstLine = snippet.code.split('\n')[0];
+  code.textContent =
+    firstLine.length > 60 ? firstLine.slice(0, 60) + '…' : firstLine;
+  card.appendChild(code);
 
-  // Badges line
-  const badgeLine = document.createElement('div');
-  badgeLine.className = 'jp-CodeLoader-snippet-badges';
+  // Tags
+  const tags = document.createElement('div');
+  tags.className = 'jp-CodeLoader-tags';
 
-  const codeBadge = document.createElement('span');
-  codeBadge.className = 'jp-CodeLoader-badge jp-CodeLoader-badge--code';
-  codeBadge.textContent = snippet.code_lang;
-  badgeLine.appendChild(codeBadge);
+  const codeTag = document.createElement('span');
+  codeTag.className = 'jp-CodeLoader-tag jp-CodeLoader-tag--code';
+  codeTag.textContent = snippet.code_lang;
+  tags.appendChild(codeTag);
 
   for (const tag of snippet.tags) {
-    const tagBadge = document.createElement('span');
-    tagBadge.className = 'jp-CodeLoader-badge jp-CodeLoader-badge--tag';
-    tagBadge.textContent = tag;
-    badgeLine.appendChild(tagBadge);
+    const t = document.createElement('span');
+    t.className = 'jp-CodeLoader-tag jp-CodeLoader-tag--neutral';
+    t.textContent = tag;
+    tags.appendChild(t);
   }
 
-  row.appendChild(titleLine);
-  row.appendChild(preview);
-  row.appendChild(badgeLine);
+  card.appendChild(tags);
 
-  row.title = snippet.code;
+  return card;
+}
 
-  return row;
+function _btn(
+  iconSvg: string,
+  title: string,
+  handler: (e: Event) => void
+): HTMLButtonElement {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'jp-CodeLoader-snipBtn';
+  btn.title = title;
+  btn.innerHTML = iconSvg;
+  btn.addEventListener('click', handler);
+  return btn;
 }

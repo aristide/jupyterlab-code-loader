@@ -1,8 +1,8 @@
 /**
  * CodeLoaderWidget: main sidebar widget.
  *
- * Builds the full sidebar UI, handles data loading, kernel-aware filtering,
- * search, and user actions (copy/open, insert snippet, refresh).
+ * Composes the Data4Now panel layout — top toolbar → subheader (kernel
+ * filter + tab row) → search → scrollable browse body → sync bar.
  */
 
 import { Widget } from '@lumino/widgets';
@@ -26,7 +26,7 @@ import {
   matchesSnippet,
   IParsedQuery
 } from './search';
-import { TabType, createTabBar } from './components/TabBar';
+import { TabType, createTabBar, updateTabCount } from './components/TabBar';
 import {
   createSearchBar,
   updateSearchPlaceholder
@@ -43,6 +43,8 @@ import { createCodeItemRow } from './components/CodeItemRow';
 import { createSnippetRow } from './components/SnippetRow';
 import { createStatusBar } from './components/StatusBar';
 import { createSetupForm } from './components/SetupForm';
+import { createTopBar } from './components/TopBar';
+import { Svg } from './svg_icons';
 
 const DEFAULT_LABELS: Record<string, string> = {
   // Sidebar
@@ -52,8 +54,8 @@ const DEFAULT_LABELS: Record<string, string> = {
   'tab.code': 'Code examples',
   'tab.snippets': 'Snippets',
   // Search
-  'search.code.placeholder': 'Search code examples...',
-  'search.snippets.placeholder': 'Search snippets...',
+  'search.code.placeholder': 'Search code examples…',
+  'search.snippets.placeholder': 'Search snippets…',
   // Status bar
   'status.lastSync': 'Last synced {time} ago',
   'status.refresh': 'Refresh',
@@ -63,10 +65,10 @@ const DEFAULT_LABELS: Record<string, string> = {
   'difficulty.intermediate': 'intermediate',
   'difficulty.advanced': 'advanced',
   // Locale
-  'locale.fallbackNotice': 'Translation unavailable \u2014 English version',
+  'locale.fallbackNotice': 'Translation unavailable — English version',
   'locale.translated': 'Translated',
   // Kernel
-  'kernel.detected': 'Kernel {name} detected',
+  'kernel.detected': '{name}',
   'kernel.none': 'No notebook active',
   // Filters
   'filter.shown': '{n} shown',
@@ -90,22 +92,66 @@ const DEFAULT_LABELS: Record<string, string> = {
   'setup.title': 'Connect a repository',
   'setup.desc':
     'Link a Git repository to browse code examples and reusable snippets.',
+  'setup.desc.rich':
+    'Link a Git repo to browse <strong>code examples</strong> and <strong>reusable snippets</strong> from inside your notebook.',
   'setup.section.repo': 'Repository',
-  'setup.field.url': 'URL',
+  'setup.field.url': 'Clone URL',
   'setup.field.url.placeholder': 'https://github.com/org/examples.git',
-  'setup.field.url.hint': 'HTTPS or SSH clone URL',
+  'setup.field.url.hint': 'HTTPS or SSH clone URL.',
+  'setup.field.url.invalid':
+    "Doesn't look like an HTTPS or SSH clone URL. Try https://…/repo.git or git@…:owner/repo.git.",
+  'setup.field.url.on': 'on',
   'setup.field.branch': 'Branch',
-  'setup.field.branch.hint': 'Target branch to track',
+  'setup.field.branch.hint': 'Target branch to track. Leave as main if unsure.',
+  'setup.field.branch.hint.rich':
+    'Target branch to track. Leave as <code class="jp-CodeLoader-codeChip">main</code> if unsure.',
   'setup.section.auth': 'Authentication',
-  'setup.section.auth.hint': 'Only required for private repositories.',
-  'setup.field.token': 'Access token',
-  'setup.field.token.placeholder': 'ghp_\u2026 or glpat-\u2026',
-  'setup.field.token.hint': 'GitHub PAT or GitLab token',
-  'setup.field.required': 'required',
+  'setup.section.auth.hint':
+    'Required for private repositories. Public repos clone anonymously.',
+  'setup.auth.public': 'Public',
+  'setup.auth.token': 'Token',
+  'setup.auth.basic': 'Login',
+  'setup.field.token': 'Personal access token',
+  'setup.field.token.placeholder': 'ghp_… or glpat-…',
+  'setup.field.token.hint':
+    'Stored in your JupyterLab keyring — never written to disk in plain text.',
+  'setup.field.username': 'Username',
+  'setup.field.username.placeholder': 'your-username',
+  'setup.field.password': 'Password',
+  'setup.field.password.placeholder': '••••••••',
+  'setup.field.basic.hint':
+    'Credentials stored in your JupyterLab keyring — never written to disk in plain text.',
+  'setup.field.required': 'Required',
+  'setup.action.paste': 'Paste from clipboard',
+  'setup.action.showToken': 'Show token',
+  'setup.action.hideToken': 'Hide token',
+  'setup.action.showPassword': 'Show password',
+  'setup.action.hidePassword': 'Hide password',
+  'setup.public.strong': 'Anonymous clone.',
+  'setup.public.desc':
+    'Only public repositories will load. Branch list and rate limits follow the host’s unauthenticated quotas.',
+  'setup.button.test': 'Test',
   'setup.button.connect': 'Connect repository',
+  'setup.test.resolving': 'Resolving {repo}#{branch}…',
+  'setup.test.testing': 'Testing…',
+  'setup.test.urlOk': 'Looks like a valid {provider} clone URL for {repo}.',
+  'setup.test.branchOk': '{repo} on {provider} — branch {branch} found.',
+  'setup.test.branchNotFound': 'Branch {branch} not found on {repo}.',
+  'setup.test.repoNotFound': 'Repository {repo} not found or not accessible.',
+  'setup.test.authRequired':
+    'Authentication required to access {repo} — switch to Token or Login.',
+  'setup.test.authFailed': 'Authentication failed — check your credentials.',
+  'setup.test.rateLimited':
+    'Host rate-limited the request — try again in a minute or sign in.',
+  'setup.test.networkError': 'Connection failed: {error}',
+  'setup.test.needsToken':
+    'Token required — enter a token or switch to Public.',
+  'setup.test.needsBasic':
+    'Username and password required — fill both or switch to Public.',
+  'setup.bottom.hint': 'Read-only by default.',
   'setup.error.urlRequired': 'Repository URL is required.',
-  'setup.status.cloning': 'Cloning repository\u2026',
-  'setup.status.connected': 'Connected \u2014 loading content\u2026',
+  'setup.status.cloning': 'Cloning…',
+  'setup.status.connected': 'Connected — loading content…',
   'setup.error.connectionFailed': 'Connection failed: {error}',
   // Reset
   'reset.confirm':
@@ -115,7 +161,10 @@ const DEFAULT_LABELS: Record<string, string> = {
   'error.loadFailed':
     'Failed to load content. Check the repository configuration.',
   // Hidden items
-  'hidden.notice': '{n} hidden'
+  'hidden.notice': '{n} hidden',
+  // Empty
+  'empty.title': 'Nothing here yet.',
+  'empty.sub': 'Try a different query or clear the filter.'
 };
 
 export class CodeLoaderWidget extends Widget {
@@ -132,21 +181,23 @@ export class CodeLoaderWidget extends Widget {
   // Search state
   private currentQuery: IParsedQuery = parseSearchQuery('');
 
-  // Cached data (all items, pre-filter)
+  // Cached data
   private domains: IDomainSummary[] = [];
   private allCodeItems: Map<string, ICodeItem[]> = new Map();
   private allSnippetItems: Map<string, ISnippetFile[]> = new Map();
   private lastSync: string | null = null;
 
-  // Config flags
+  // Config
   private allowReset = false;
 
   // DOM references
-  private headerEl: HTMLElement | null = null;
+  private topbarEl: HTMLElement | null = null;
+  private subheaderEl: HTMLElement | null = null;
   private kernelIndicatorEl: HTMLElement | null = null;
+  private tabBarEl: HTMLElement | null = null;
   private searchBarEl: HTMLElement | null = null;
-  private contentEl: HTMLElement | null = null;
-  private statusBarEl: HTMLElement | null = null;
+  private browseEl: HTMLElement | null = null;
+  private syncbarEl: HTMLElement | null = null;
 
   constructor(
     app: JupyterFrontEnd,
@@ -158,15 +209,12 @@ export class CodeLoaderWidget extends Widget {
     this.notebookTracker = notebookTracker;
     this.locale = locale;
     this.addClass('jp-CodeLoader');
-
     this._initialize();
   }
 
   private async _initialize(): Promise<void> {
-    // Load UI labels first so all UI (including setup form) is translated
     await this._loadUILabels();
 
-    // Check if extension is configured
     try {
       const config = await requestAPI<IConfig>('config');
       this.allowReset = config.allow_reset;
@@ -190,7 +238,7 @@ export class CodeLoaderWidget extends Widget {
       const labels = await requestAPI<Record<string, string>>('i18n');
       this.uiLabels = { ...DEFAULT_LABELS, ...labels };
     } catch {
-      // Keep defaults
+      // keep defaults
     }
   }
 
@@ -204,7 +252,7 @@ export class CodeLoaderWidget extends Widget {
     return text;
   }
 
-  // ---- Setup Form ----
+  // ---- Setup form ----
 
   private _renderSetupForm(): void {
     this.node.innerHTML = '';
@@ -212,41 +260,40 @@ export class CodeLoaderWidget extends Widget {
       this.node.innerHTML = '';
       this._initialize();
     }, this.uiLabels);
-    this.node.appendChild(form);
+
+    // The form uses display: contents so its children participate as direct
+    // flex items of .jp-CodeLoader. Append the children individually instead
+    // of relying on the empty wrapper.
+    while (form.firstChild) {
+      this.node.appendChild(form.firstChild);
+    }
   }
 
-  // ---- UI Building ----
+  // ---- Connected layout ----
 
   private _buildUI(): void {
     this.node.innerHTML = '';
 
-    // Header
-    this.headerEl = document.createElement('div');
-    this.headerEl.className = 'jp-CodeLoader-header';
+    // Top toolbar with optional reset action
+    const actions = this.allowReset
+      ? [
+          {
+            icon: Svg.trash,
+            title: this._t('reset.title'),
+            onClick: () => this._handleReset()
+          }
+        ]
+      : [];
+    this.topbarEl = createTopBar(
+      this._t('sidebar.title'),
+      'code-loader',
+      actions
+    );
 
-    const titleEl = document.createElement('h2');
-    titleEl.className = 'jp-CodeLoader-title';
-    titleEl.textContent = this._t('sidebar.title');
+    // Subheader with kernel filter + tabs
+    this.subheaderEl = document.createElement('div');
+    this.subheaderEl.className = 'jp-CodeLoader-subheader';
 
-    this.headerEl.appendChild(titleEl);
-
-    if (this.allowReset) {
-      const resetBtn = document.createElement('button');
-      resetBtn.className = 'jp-CodeLoader-resetBtn';
-      resetBtn.title = this._t('reset.title');
-      resetBtn.innerHTML =
-        '<svg viewBox="0 0 16 16" width="14" height="14">' +
-        '<path fill="currentColor" d="M2 2.5A2.5 2.5 0 0 1 4.5 0h5.75a.75.75 0 0 1' +
-        ' .53.22l3.5 3.5a.75.75 0 0 1 .22.53V12.5A2.5 2.5 0 0 1 12 15H4.5A2.5' +
-        ' 2.5 0 0 1 2 12.5v-10zm6.75 4.25a.75.75 0 0 0-1.5 0v2.5a.75.75 0 0 0' +
-        ' 1.5 0v-2.5zM8 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>';
-      resetBtn.addEventListener('click', () => {
-        this._handleReset();
-      });
-      this.headerEl.appendChild(resetBtn);
-    }
-
-    // Kernel indicator
     this.kernelIndicatorEl = createKernelIndicator(
       this.activeCodeLang,
       this.activeKernelName,
@@ -255,9 +302,9 @@ export class CodeLoaderWidget extends Widget {
         none: this._t('kernel.none')
       }
     );
+    this.subheaderEl.appendChild(this.kernelIndicatorEl);
 
-    // Tab bar
-    const tabBar = createTabBar(
+    this.tabBarEl = createTabBar(
       (tab: TabType) => {
         this.currentTab = tab;
         this._updateSearchPlaceholder();
@@ -268,6 +315,7 @@ export class CodeLoaderWidget extends Widget {
         snippets: this._t('tab.snippets')
       }
     );
+    this.subheaderEl.appendChild(this.tabBarEl);
 
     // Search bar
     this.searchBarEl = createSearchBar((query: string) => {
@@ -275,21 +323,19 @@ export class CodeLoaderWidget extends Widget {
       this._renderContent();
     }, this._t('search.code.placeholder'));
 
-    // Content area (scrollable)
-    this.contentEl = document.createElement('div');
-    this.contentEl.className = 'jp-CodeLoader-content';
+    // Browse body (scrollable list)
+    this.browseEl = document.createElement('div');
+    this.browseEl.className = 'jp-CodeLoader-browse';
 
-    // Status bar (will be created after data loads)
-    this.statusBarEl = document.createElement('div');
-    this.statusBarEl.className = 'jp-CodeLoader-statusContainer';
+    // Sync bar
+    this.syncbarEl = document.createElement('div');
+    this.syncbarEl.style.display = 'contents';
 
-    // Assemble
-    this.node.appendChild(this.headerEl);
-    this.node.appendChild(this.kernelIndicatorEl);
-    this.node.appendChild(tabBar);
+    this.node.appendChild(this.topbarEl);
+    this.node.appendChild(this.subheaderEl);
     this.node.appendChild(this.searchBarEl);
-    this.node.appendChild(this.contentEl);
-    this.node.appendChild(this.statusBarEl);
+    this.node.appendChild(this.browseEl);
+    this.node.appendChild(this.syncbarEl);
   }
 
   private _updateSearchPlaceholder(): void {
@@ -323,7 +369,6 @@ export class CodeLoaderWidget extends Widget {
         }
       );
     }
-
     this._renderContent();
   }
 
@@ -334,7 +379,6 @@ export class CodeLoaderWidget extends Widget {
       const registry = await requestAPI<any>('registry');
       this.domains = registry.domains || [];
 
-      // Load code and snippets for each domain in parallel
       const promises = this.domains.map(async (domain: IDomainSummary) => {
         try {
           const codeResp = await requestAPI<ICodeListResponse>(
@@ -344,7 +388,6 @@ export class CodeLoaderWidget extends Widget {
         } catch {
           this.allCodeItems.set(domain.id, []);
         }
-
         try {
           const snippetResp = await requestAPI<ISnippetListResponse>(
             `domains/${domain.id}/snippets`
@@ -354,37 +397,49 @@ export class CodeLoaderWidget extends Widget {
           this.allSnippetItems.set(domain.id, []);
         }
       });
-
       await Promise.all(promises);
 
-      // Get sync status
       try {
         const status = await requestAPI<any>('status');
         this.lastSync = status.last_sync;
       } catch {
-        // Ignore
+        // ignore
       }
 
       this._renderContent();
-      this._renderStatusBar();
+      this._renderSyncBar();
     } catch (e) {
-      if (this.contentEl) {
-        const errDiv = document.createElement('div');
-        errDiv.className = 'jp-CodeLoader-error';
-        errDiv.textContent = this._t('error.loadFailed');
-        this.contentEl.innerHTML = '';
-        this.contentEl.appendChild(errDiv);
+      if (this.browseEl) {
+        const err = document.createElement('div');
+        err.className = 'jp-CodeLoader-error';
+        err.textContent = this._t('error.loadFailed');
+        this.browseEl.innerHTML = '';
+        this.browseEl.appendChild(err);
       }
     }
   }
 
-  // ---- Rendering ----
+  // ---- Render ----
 
   private _renderContent(): void {
-    if (!this.contentEl) {
+    if (!this.browseEl) {
       return;
     }
-    this.contentEl.innerHTML = '';
+    this.browseEl.innerHTML = '';
+
+    // Update tab counts (across all domains, before search)
+    if (this.tabBarEl) {
+      let codeTotal = 0;
+      let snippetTotal = 0;
+      for (const domain of this.domains) {
+        codeTotal += (this.allCodeItems.get(domain.id) || []).length;
+        for (const file of this.allSnippetItems.get(domain.id) || []) {
+          snippetTotal += file.snippets.length;
+        }
+      }
+      updateTabCount(this.tabBarEl, 'code', codeTotal);
+      updateTabCount(this.tabBarEl, 'snippets', snippetTotal);
+    }
 
     if (this.currentTab === 'code') {
       this._renderCodeTab();
@@ -392,36 +447,36 @@ export class CodeLoaderWidget extends Widget {
       this._renderSnippetsTab();
     }
 
-    this._renderStatusBar();
+    this._renderSyncBar();
   }
 
   private _renderCodeTab(): void {
-    if (!this.contentEl) {
+    if (!this.browseEl) {
       return;
     }
-
     const difficultyLabels: Record<string, string> = {
       beginner: this._t('difficulty.beginner'),
       intermediate: this._t('difficulty.intermediate'),
       advanced: this._t('difficulty.advanced')
     };
 
+    let renderedAny = false;
     for (const domain of this.domains) {
       const allItems = this.allCodeItems.get(domain.id) || [];
-
-      // Apply filters
       const filtered = allItems.filter(item =>
         matchesCodeItem(item, this.currentQuery, this.activeCodeLang)
       );
       const hidden = allItems.length - filtered.length;
+      if (allItems.length === 0) {
+        continue;
+      }
 
       const accordion = createDomainAccordion(
         domain.name,
         filtered.length,
-        hidden,
+        0,
         filtered.length > 0
       );
-
       const content = getAccordionContent(accordion);
       for (const item of filtered) {
         const row = createCodeItemRow(
@@ -433,52 +488,52 @@ export class CodeLoaderWidget extends Widget {
         );
         content.appendChild(row);
       }
-
       if (hidden > 0) {
         const notice = document.createElement('div');
         notice.className = 'jp-CodeLoader-hiddenNotice';
         notice.textContent = this._t('hidden.notice', { n: String(hidden) });
         content.appendChild(notice);
       }
+      this.browseEl.appendChild(accordion);
+      renderedAny = renderedAny || filtered.length > 0;
+    }
 
-      this.contentEl.appendChild(accordion);
+    if (!renderedAny) {
+      this._renderEmpty();
     }
   }
 
   private _renderSnippetsTab(): void {
-    if (!this.contentEl) {
+    if (!this.browseEl) {
       return;
     }
 
+    let renderedAny = false;
     for (const domain of this.domains) {
       const allFiles = this.allSnippetItems.get(domain.id) || [];
-
-      // Filter snippets within each file
-      let totalVisible = 0;
-      const filteredFiles: Array<{
-        file: ISnippetFile;
-        snippets: ISnippet[];
-      }> = [];
-
+      let visible = 0;
+      const filtered: Array<{ file: ISnippetFile; snippets: ISnippet[] }> = [];
       for (const file of allFiles) {
-        const filtered = file.snippets.filter(s =>
+        const list = file.snippets.filter(s =>
           matchesSnippet(s, this.currentQuery, this.activeCodeLang)
         );
-        if (filtered.length > 0) {
-          filteredFiles.push({ file, snippets: filtered });
-          totalVisible += filtered.length;
+        if (list.length > 0) {
+          filtered.push({ file, snippets: list });
+          visible += list.length;
         }
+      }
+      if (allFiles.length === 0) {
+        continue;
       }
 
       const accordion = createDomainAccordion(
         domain.name,
-        totalVisible,
+        visible,
         0,
-        totalVisible > 0
+        visible > 0
       );
-
       const content = getAccordionContent(accordion);
-      for (const { snippets } of filteredFiles) {
+      for (const { snippets } of filtered) {
         for (const snippet of snippets) {
           const row = createSnippetRow(
             snippet,
@@ -490,33 +545,45 @@ export class CodeLoaderWidget extends Widget {
           content.appendChild(row);
         }
       }
+      this.browseEl.appendChild(accordion);
+      renderedAny = renderedAny || visible > 0;
+    }
 
-      this.contentEl.appendChild(accordion);
+    if (!renderedAny) {
+      this._renderEmpty();
     }
   }
 
-  private _renderStatusBar(): void {
-    if (!this.statusBarEl) {
+  private _renderEmpty(): void {
+    if (!this.browseEl) {
       return;
     }
-    this.statusBarEl.innerHTML = '';
+    const empty = document.createElement('div');
+    empty.className = 'jp-CodeLoader-empty';
+    empty.innerHTML = `${Svg.search}<strong>${this._t('empty.title')}</strong><span>${this._t('empty.sub')}</span>`;
+    this.browseEl.appendChild(empty);
+  }
 
-    // Count totals
+  private _renderSyncBar(): void {
+    if (!this.syncbarEl) {
+      return;
+    }
+    this.syncbarEl.innerHTML = '';
+
     let shown = 0;
     let total = 0;
-
     if (this.currentTab === 'code') {
       for (const domain of this.domains) {
-        const allItems = this.allCodeItems.get(domain.id) || [];
-        total += allItems.length;
-        shown += allItems.filter(item =>
-          matchesCodeItem(item, this.currentQuery, this.activeCodeLang)
+        const all = this.allCodeItems.get(domain.id) || [];
+        total += all.length;
+        shown += all.filter(i =>
+          matchesCodeItem(i, this.currentQuery, this.activeCodeLang)
         ).length;
       }
     } else {
       for (const domain of this.domains) {
-        const allFiles = this.allSnippetItems.get(domain.id) || [];
-        for (const file of allFiles) {
+        const files = this.allSnippetItems.get(domain.id) || [];
+        for (const file of files) {
           total += file.snippets.length;
           shown += file.snippets.filter(s =>
             matchesSnippet(s, this.currentQuery, this.activeCodeLang)
@@ -525,7 +592,7 @@ export class CodeLoaderWidget extends Widget {
       }
     }
 
-    const statusBar = createStatusBar(
+    const bar = createStatusBar(
       this.lastSync,
       shown,
       total - shown,
@@ -540,8 +607,7 @@ export class CodeLoaderWidget extends Widget {
         justNow: this._t('status.justNow')
       }
     );
-
-    this.statusBarEl.appendChild(statusBar);
+    this.syncbarEl.appendChild(bar);
   }
 
   // ---- Actions ----
@@ -553,7 +619,6 @@ export class CodeLoaderWidget extends Widget {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ domain, file, locale: this.locale })
       });
-
       const factory = file.endsWith('.ipynb') ? undefined : 'Editor';
       await this.app.commands.execute('docmanager:open', {
         path: result.path,
@@ -573,19 +638,16 @@ export class CodeLoaderWidget extends Widget {
     const notebook = this.notebookTracker?.currentWidget;
 
     if (notebook) {
-      // Check kernel compatibility
       const session = notebook.sessionContext;
       const kernelName = session.session?.kernel?.name || null;
       const nbLang = kernelToCodeLang(kernelName);
 
       if (!nbLang || nbLang === snippet.code_lang) {
-        // Compatible — insert into active cell
         this._insertCodeIntoNotebook(notebook, code);
         return;
       }
     }
 
-    // No notebook or incompatible kernel — create a new one
     await this._createNotebookAndInsert(snippet.code_lang, code);
   }
 
@@ -607,19 +669,15 @@ export class CodeLoaderWidget extends Widget {
     }
 
     const source = activeCell.model.sharedModel.getSource();
-
     if (!source.trim()) {
-      // Empty cell — replace content
       activeCell.model.sharedModel.setSource(code);
     } else if (activeCell.editor) {
-      // Cell has content — insert at cursor position
       const editor = activeCell.editor;
       const cursor = editor.getCursorPosition();
       const offset = editor.getOffsetAt(cursor);
       const newSource = source.slice(0, offset) + code + source.slice(offset);
       activeCell.model.sharedModel.setSource(newSource);
     } else {
-      // Fallback — insert new cell below
       nbModel.sharedModel.insertCell(activeIndex + 1, {
         cell_type: 'code',
         source: code
@@ -634,11 +692,7 @@ export class CodeLoaderWidget extends Widget {
   ): Promise<void> {
     try {
       const kernelName = codeLangToKernel(codeLang);
-      await this.app.commands.execute('notebook:create-new', {
-        kernelName
-      });
-
-      // Wait for the new notebook to appear
+      await this.app.commands.execute('notebook:create-new', { kernelName });
       const nb = this.notebookTracker?.currentWidget;
       if (nb) {
         await nb.sessionContext.ready;
@@ -646,7 +700,6 @@ export class CodeLoaderWidget extends Widget {
       }
     } catch (e) {
       console.error('Failed to create notebook for snippet:', e);
-      // Last resort: copy to clipboard
       try {
         await navigator.clipboard.writeText(code);
       } catch {
@@ -660,7 +713,6 @@ export class CodeLoaderWidget extends Widget {
       snippet.imports && snippet.imports.length > 0
         ? snippet.imports.join('\n') + '\n\n' + snippet.code
         : snippet.code;
-
     this._toClipboard(code);
   }
 
@@ -670,11 +722,9 @@ export class CodeLoaderWidget extends Widget {
       lines.push(...snippet.imports);
     }
     lines.push(...snippet.code.split('\n').filter((l: string) => l.trim()));
-
     const command = lines.length > 1 ? lines.join(' && ') : lines[0] || '';
 
     try {
-      // Open or reuse a terminal
       const terminals = this.app.serviceManager.terminals;
       await terminals.ready;
 
@@ -685,33 +735,22 @@ export class CodeLoaderWidget extends Widget {
       } else {
         termModel = await terminals.startNew();
       }
-
-      // Ensure the terminal widget is open and focused
       await this.app.commands.execute('terminal:open', {
         name: termModel.name
       });
-
-      // Connect and send the command text (without \r so user can review)
       const connection = terminals.connectTo({ model: termModel });
       connection.send({ type: 'stdin', content: [command] });
     } catch (e) {
       console.error('[CodeLoader] Failed to send to terminal:', e);
-      // Fallback: copy to clipboard
       this._toClipboard(command);
     }
   }
 
   private _toClipboard(text: string): void {
-    // navigator.clipboard works on localhost (secure context)
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(
-        () => {
-          console.log('[CodeLoader] Copied to clipboard');
-        },
-        () => {
-          // Fallback: JupyterLab synthetic copy event
-          Clipboard.copyToSystem(text);
-        }
+        () => console.log('[CodeLoader] Copied to clipboard'),
+        () => Clipboard.copyToSystem(text)
       );
     } else {
       Clipboard.copyToSystem(text);
@@ -721,7 +760,6 @@ export class CodeLoaderWidget extends Widget {
   private async _refreshCache(): Promise<void> {
     try {
       await requestAPI('refresh', { method: 'POST' });
-      // Clear caches and reload
       this.allCodeItems.clear();
       this.allSnippetItems.clear();
       await this._loadRegistry();

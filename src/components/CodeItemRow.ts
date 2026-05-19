@@ -1,8 +1,10 @@
 /**
- * Code item row component for the Code examples tab.
+ * Code item row — icon + body (title, meta, tags) + chevron.
+ * Row click opens the example; the chevron is purely decorative.
  */
 
 import { ICodeItem } from '../model';
+import { Svg } from '../svg_icons';
 
 type Labels = Record<string, string>;
 
@@ -14,72 +16,37 @@ export function createCodeItemRow(
   labels: Labels
 ): HTMLElement {
   const row = document.createElement('div');
-  row.className = 'jp-CodeLoader-codeItem';
-  row.title = item.description;
+  row.className = 'jp-CodeLoader-item';
+  row.title = item.description || item.title;
+  row.tabIndex = 0;
+  row.setAttribute('role', 'button');
 
-  // Title line with open button
-  const titleLine = document.createElement('div');
-  titleLine.className = 'jp-CodeLoader-codeItem-title';
+  // Icon
+  const icon = document.createElement('div');
+  const isNotebook = item.type === 'notebook' || item.file.endsWith('.ipynb');
+  icon.className =
+    'jp-CodeLoader-itemIcon ' +
+    (isNotebook
+      ? 'jp-CodeLoader-itemIcon--notebook'
+      : 'jp-CodeLoader-itemIcon--script');
+  icon.innerHTML = isNotebook ? Svg.notebook : Svg.script;
 
-  // File type icon
-  const icon = document.createElement('span');
-  icon.className = 'jp-CodeLoader-codeItem-icon';
-  if (item.file.endsWith('.ipynb')) {
-    icon.textContent = '\uD83D\uDCD3';
-    icon.title = labels['code.tooltip.notebook'] || 'Notebook';
-  } else if (item.file.endsWith('.py')) {
-    icon.textContent = '\uD83D\uDC0D';
-    icon.title = labels['code.tooltip.python'] || 'Python script';
-  } else if (item.file.endsWith('.R') || item.file.endsWith('.Rmd')) {
-    icon.textContent = '\uD83D\uDCCA';
-    icon.title = labels['code.tooltip.r'] || 'R script';
-  } else if (item.file.endsWith('.sh')) {
-    icon.textContent = '\uD83D\uDCBB';
-    icon.title = labels['code.tooltip.bash'] || 'Bash script';
-  } else {
-    icon.textContent = '\uD83D\uDCC4';
-    icon.title = labels['code.tooltip.script'] || 'Script';
-  }
+  // Body
+  const body = document.createElement('div');
+  body.className = 'jp-CodeLoader-itemBody';
 
-  const titleText = document.createElement('span');
-  titleText.className = 'jp-CodeLoader-codeItem-titleText';
-  titleText.textContent = item.title;
+  const title = document.createElement('div');
+  title.className = 'jp-CodeLoader-itemTitle';
+  title.textContent = item.title;
+  body.appendChild(title);
 
-  // Open button
-  const openBtn = document.createElement('button');
-  openBtn.className = 'jp-CodeLoader-codeItem-openBtn';
-  openBtn.textContent = '\u2B9E';
-  openBtn.title = labels['code.button.open'] || 'Copy to workspace and open';
-  openBtn.addEventListener('click', (e: Event) => {
-    e.stopPropagation();
-    onOpen(domainId, item.file);
-  });
-
-  titleLine.appendChild(icon);
-  titleLine.appendChild(titleText);
-
-  // Translation indicator
-  if (item._file_translated) {
-    const translated = document.createElement('span');
-    translated.className =
-      'jp-CodeLoader-badge jp-CodeLoader-badge--translated';
-    translated.textContent = '\u2713';
-    translated.title = labels['code.badge.translated'] || 'Translated';
-    titleLine.appendChild(translated);
-  }
-
-  titleLine.appendChild(openBtn);
-
-  // Metadata line
-  const metaLine = document.createElement('div');
-  metaLine.className = 'jp-CodeLoader-codeItem-meta';
-
+  const meta = document.createElement('div');
+  meta.className = 'jp-CodeLoader-itemMeta';
   const typeBadge =
     item.type === 'notebook'
       ? labels['code.type.notebook'] || 'notebook'
       : labels['code.type.script'] || 'script';
   const parts: string[] = [typeBadge];
-
   if (item.code_lang) {
     parts.push(item.code_lang);
   }
@@ -89,31 +56,68 @@ export function createCodeItemRow(
   if (item.estimated_time) {
     parts.push(item.estimated_time);
   }
+  parts.forEach((part, i) => {
+    if (i > 0) {
+      const sep = document.createElement('span');
+      sep.className = 'jp-CodeLoader-sep';
+      sep.textContent = '·';
+      meta.appendChild(sep);
+    }
+    const span = document.createElement('span');
+    span.textContent = part;
+    meta.appendChild(span);
+  });
+  body.appendChild(meta);
 
-  metaLine.textContent = parts.join(' \u00B7 ');
-
-  // Language badges
-  const badgeLine = document.createElement('div');
-  badgeLine.className = 'jp-CodeLoader-codeItem-badges';
-
+  // Tags
   if (item._tags_display) {
-    const langBadge = document.createElement('span');
-    langBadge.className = 'jp-CodeLoader-badge jp-CodeLoader-badge--lang';
-    langBadge.textContent = `lang:${item._tags_display.content_lang}`;
-    badgeLine.appendChild(langBadge);
+    const tags = document.createElement('div');
+    tags.className = 'jp-CodeLoader-tags';
 
-    const codeBadge = document.createElement('span');
-    codeBadge.className = 'jp-CodeLoader-badge jp-CodeLoader-badge--code';
-    codeBadge.textContent = `code:${item._tags_display.code_lang}`;
-    badgeLine.appendChild(codeBadge);
+    const langTag = document.createElement('span');
+    langTag.className = 'jp-CodeLoader-tag jp-CodeLoader-tag--lang';
+    langTag.textContent = `lang:${item._tags_display.content_lang}`;
+    tags.appendChild(langTag);
+
+    const codeTag = document.createElement('span');
+    codeTag.className = 'jp-CodeLoader-tag jp-CodeLoader-tag--code';
+    codeTag.textContent = `code:${item._tags_display.code_lang}`;
+    tags.appendChild(codeTag);
+
+    if (item._file_translated) {
+      const tr = document.createElement('span');
+      tr.className = 'jp-CodeLoader-tag jp-CodeLoader-tag--translated';
+      tr.textContent = labels['code.badge.translated'] || 'Translated';
+      tags.appendChild(tr);
+    }
+
+    body.appendChild(tags);
   }
 
-  row.appendChild(titleLine);
-  row.appendChild(metaLine);
+  // Chevron
+  const chev = document.createElement('button');
+  chev.type = 'button';
+  chev.className = 'jp-CodeLoader-itemChev';
+  chev.title = labels['code.button.open'] || 'Copy to workspace and open';
+  chev.innerHTML = Svg.chevron;
 
-  if (badgeLine.children.length > 0) {
-    row.appendChild(badgeLine);
-  }
+  // Whole row triggers open
+  const open = (e: Event) => {
+    e.stopPropagation();
+    onOpen(domainId, item.file);
+  };
+  row.addEventListener('click', open);
+  row.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onOpen(domainId, item.file);
+    }
+  });
+  chev.addEventListener('click', open);
+
+  row.appendChild(icon);
+  row.appendChild(body);
+  row.appendChild(chev);
 
   return row;
 }
