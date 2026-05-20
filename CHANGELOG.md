@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.0
+
+### Added
+
+- Data4Now design system applied to the sidebar and setup form (navy/teal/magenta palette, Montserrat/Roboto/JetBrains Mono fonts).
+- New code-loader brand logo and wordmark (`style/code-loader-logo.svg`, `style/code-loader-wordmark.svg`) wired into the JupyterLab sidebar icon and topbar.
+- Public-repository authentication mode (default), alongside Token and Login (username/password) modes.
+- Inline "Test" button on the setup form: validates URL format, resolves the provider (GitHub/GitLab), and checks branch existence via REST APIs before connecting.
+- Extended UI string set: rich-HTML descriptions, provider hints, test-connection statuses (resolving, branch found/missing, repo not found, auth required, rate-limited), credential field labels, and empty-state copy.
+- French translations for all new strings in `i18n/fr.json` (89 keys total, full parity with `en.json`).
+
+### Changed
+
+- `en.json` bundled translation file synced with the current `DEFAULT_LABELS` set in `widget.ts` (was missing ~33 keys introduced by recent UI work).
+- Setup form layout restructured into Repository / Authentication cards with a 3-option segmented auth control.
+
 ## 0.1.0
 
 ### Added

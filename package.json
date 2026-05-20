@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-code-loader",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "JupyterLab extension for browsing and using code examples and snippets from a Git repository",
   "keywords": [
     "jupyter",
