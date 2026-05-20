@@ -8,7 +8,7 @@ Jupyterlab-code-loader is a self-contained JupyterLab extension that provides a 
 
 ![Jupyter code loader form](https://raw.githubusercontent.com/aristide/jupyterlab-code-loader/master/screenshot1.png)
 
-![Jupyter code loader pannel](https://raw.githubusercontent.com/aristide/jupyterlab-code-loader/master/screenshot1.png)
+![Jupyter code loader pannel](https://raw.githubusercontent.com/aristide/jupyterlab-code-loader/master/screenshot2.png)
 
 ## Requirements
 
